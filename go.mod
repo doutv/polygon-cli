@@ -21,7 +21,7 @@ require (
 	github.com/prometheus/client_model v0.6.1
 	github.com/prometheus/common v0.60.1
 	github.com/rs/zerolog v1.33.0
-	github.com/schollz/progressbar/v3 v3.17.0
+	github.com/schollz/progressbar/v3 v3.17.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
@@ -133,8 +133,8 @@ require (
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
-	golang.org/x/term v0.25.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/term v0.26.0 // indirect
 	google.golang.org/genproto v0.0.0-20241021214115-324edc3d5d38 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241015192408-796eee8c2d53 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241021214115-324edc3d5d38 // indirect
