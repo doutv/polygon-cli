@@ -25,6 +25,7 @@ import (
 
 	"github.com/0xPolygon/polygon-cli/bindings/tester"
 	"github.com/0xPolygon/polygon-cli/bindings/tokens"
+	erc4337loadtest "github.com/0xPolygon/polygon-cli/cmd/loadtest/erc4337"
 	uniswapv3loadtest "github.com/0xPolygon/polygon-cli/cmd/loadtest/uniswapv3"
 
 	"github.com/0xPolygon/polygon-cli/abi"
@@ -71,7 +72,7 @@ const (
 	loadTestModeStore
 	loadTestModeTransaction
 	loadTestModeUniswapV3
-
+	loadTestModeERC4337
 	codeQualitySeed       = "code code code code code code code code code code code quality"
 	codeQualityPrivateKey = "42b6e34dc21598a807dc19d7784c71b2a7a01f6480dc6f58258f78e539f1a1fa"
 )
@@ -112,6 +113,8 @@ func characterToLoadTestMode(mode string) (loadTestMode, error) {
 		return loadTestModeTransaction, nil
 	case "v3", "uniswapv3":
 		return loadTestModeUniswapV3, nil
+	case "4337", "erc4337":
+		return loadTestModeERC4337, nil
 	default:
 		return 0, fmt.Errorf("unrecognized load test mode: %s", mode)
 	}
@@ -647,6 +650,22 @@ func mainLoop(ctx context.Context, c *ethclient.Client, rpc *ethrpc.Client) erro
 			return err
 		}
 	}
+	var erc4337Config erc4337loadtest.ERC4337Config
+	if hasMode(loadTestModeERC4337, ltp.ParsedModes) {
+		erc4337Addresses := erc4337loadtest.ERC4337Addresses{
+			EntryPoint: ethcommon.HexToAddress(*erc4337LoadTestParams.EntryPoint),
+			AccountFactory:    ethcommon.HexToAddress(*erc4337LoadTestParams.AccountFactory),
+			PayableAccount:    ethcommon.HexToAddress(*erc4337LoadTestParams.PayableAccount),
+			WebAuthnValidator: ethcommon.HexToAddress(*erc4337LoadTestParams.WebAuthnAndECDSAValidator),
+			Config:            ethcommon.HexToAddress(*erc4337LoadTestParams.Config),
+			Helper:            ethcommon.HexToAddress(*erc4337LoadTestParams.Helper),
+			TokenReceiver:     ethcommon.HexToAddress(*erc4337LoadTestParams.TokenReceiver),
+		}
+		erc4337Config, err = initERC4337Loadtest(ctx, c, tops, cops, erc4337Addresses, *ltp.FromETHAddress)
+		if err != nil {
+			return err
+		}
+	}
 
 	var i int64
 	err = initNonce(ctx, c)
@@ -723,6 +742,8 @@ func mainLoop(ctx context.Context, c *ethclient.Client, rpc *ethrpc.Client) erro
 				case loadTestModeUniswapV3:
 					swapAmountIn := big.NewInt(int64(*uniswapv3LoadTestParams.SwapAmountInput))
 					startReq, endReq, tErr = runUniswapV3Loadtest(ctx, c, myNonceValue, uniswapV3Config, poolConfig, swapAmountIn)
+				case loadTestModeERC4337:
+					startReq, endReq, tErr = runERC4337Loadtest(ctx, c, myNonceValue, erc4337Config)
 				default:
 					log.Error().Str("mode", mode.String()).Msg("We've arrived at a load test mode that we don't recognize")
 				}

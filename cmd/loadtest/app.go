@@ -252,7 +252,8 @@ R, recall - Replay or simulate transactions
 rpc - Call random rpc methods
 s, store - Store bytes in a dynamic byte array
 t, transaction - Send transactions
-v3, uniswapv3 - Perform UniswapV3 swaps`)
+v3, uniswapv3 - Perform UniswapV3 swaps
+4337, erc4337 - Perform ERC4337 user operations`)
 	ltp.Function = LoadtestCmd.Flags().Uint64P("function", "f", 1, "A specific function to be called if running with --mode f or a specific precompiled contract when running with --mode a")
 	ltp.ByteCount = LoadtestCmd.Flags().Uint64P("byte-count", "b", 1024, "If we're in store mode, this controls how many bytes we'll try to store in our contract")
 	ltp.LtAddress = LoadtestCmd.Flags().String("lt-address", "", "The address of a pre-deployed load test contract")
@@ -274,4 +275,5 @@ v3, uniswapv3 - Perform UniswapV3 swaps`)
 
 func initSubCommands() {
 	LoadtestCmd.AddCommand(uniswapV3LoadTestCmd)
+	LoadtestCmd.AddCommand(erc4337LoadTestCmd)
 }
