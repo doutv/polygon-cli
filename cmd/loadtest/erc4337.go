@@ -85,6 +85,6 @@ func runERC4337Loadtest(ctx context.Context, c *ethclient.Client, nonce uint64, 
 	defer func() { t2 = time.Now() }()
 
 	// send user operation
-	// err := erc4337loadtest.GenerateUserOperation(config, tops)
+	
 	return
 }
