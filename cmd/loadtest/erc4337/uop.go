@@ -9,8 +9,6 @@ import (
 	"math/big"
 	"time"
 
-	// "github.com/ethereum/go-ethereum/accounts/abi"
-
 	"github.com/0xPolygon/polygon-cli/bindings/4337/accountfactory"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/entryPoint/core/entrypoint"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/payableaccount"
@@ -264,18 +262,17 @@ func generateSignatureForUop(
 	}
 
 	// Generate EOA signature ECDSA-Secp256k1
-	eoaSignature, err := personalSign(hexutil.Encode(uopHash[:]), eoaPrivateKey)
+	eoaSignature, err := personalSign(uopHash[:], eoaPrivateKey)
 	if err != nil {
 		panic(fmt.Errorf("failed to sign message: %v", err))
 	}
-	log.Info().Msgf("eoaSignature: %s", hexutil.Encode(eoaSignature))
 	// Verify EOA signature
 	recoverAddr, err := helper.RecoverAddress(cops, eoaSignature, uopHash)
 	if err != nil {
 		panic(fmt.Errorf("failed to verify EOA signature: %v", err))
 	}
 	if recoverAddr != tops.From {
-		panic(fmt.Sprintf("eoa signature verification failed: expected %s, got %s", tops.From.Hex(), recoverAddr.Hex()))
+		panic(fmt.Sprintf("eoa recover address failed: expected %s, got %s", tops.From.Hex(), recoverAddr.Hex()))
 	}
 
 	// Generate Passkey Signature ECDSA-Secp256r1 / P-256
@@ -384,8 +381,8 @@ func packExecutionCalldata(address common.Address, value *big.Int, data []byte) 
 
 
 // Source: https://github.com/etaaa/Golang-Ethereum-Personal-Sign/
-func personalSign(message string, privateKey *ecdsa.PrivateKey) ([]byte, error) {
-	fullMessage := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(message), message)
+func personalSign(msgHash []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
+	fullMessage := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(msgHash), msgHash)
 	hash := crypto.Keccak256Hash([]byte(fullMessage))
 	signatureBytes, err := crypto.Sign(hash.Bytes(), privateKey)
 	if err != nil {
