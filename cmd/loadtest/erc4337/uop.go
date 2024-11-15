@@ -13,13 +13,10 @@ import (
 	"github.com/0xPolygon/polygon-cli/bindings/4337/entryPoint/core/entrypoint"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/payableaccount"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/test/helper"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/rs/zerolog/log"
 )
 
 // UserOperation represents an ERC-4337 User Operation
@@ -75,7 +72,7 @@ func SendUops(
 	if err != nil {
 		return
 	}
-	log.Trace().Interface("userOps", userOps).Msg("Sending user operations")
+	// log.Trace().Interface("userOps", userOps).Msg("Sending user operations")
 	_, err = cfg.EntryPoint.Contract.HandleOps(tops, userOps, tops.From)
 	if err != nil {
 		return
@@ -296,12 +293,13 @@ func generateSignatureForUop(
 		},
 		D: passkeyPrivKey,
 	}
-	passkeySignature, err := passkeyPrivateKey.Sign(rand.Reader, passkeyMsgHash[:], nil)
+	r, s, err := ecdsa.Sign(rand.Reader, passkeyPrivateKey, passkeyMsgHash[:])
 	if err != nil {
 		panic(fmt.Errorf("failed to sign message: %v", err))
 	}
-	r := new(big.Int).SetBytes(passkeySignature[:32])
-	s := new(big.Int).SetBytes(passkeySignature[32:])
+	if !ecdsa.Verify(&passkeyPrivateKey.PublicKey, passkeyMsgHash[:], r, s) {
+		panic(fmt.Errorf("failed to verify passkey signature"))
+	}
 	// Verify passkey signature
 	/// 0 : PRECOMPILED_VERIFIER, helper validation passes, but handleops fails.
 	/// 1 : DAIMO_VERIFIER success
@@ -309,7 +307,7 @@ func generateSignatureForUop(
 	verifyType := uint8(0)
 	isVerifySuccess, _, err := helper.PasskeyVerify(
 		cops,
-		passkeyMsgHash,
+		uopHash,
 		r,
 		s,
 		passkeyPubX,
@@ -348,37 +346,6 @@ func generateSignatureForUop(
 
 	return signature, nil
 }
-
-func packExecutionCalldata(address common.Address, value *big.Int, data []byte) ([]byte, error) {
-	arguments := abi.Arguments{
-		{Type: abi.Type{T: abi.AddressTy}},
-		{Type: abi.Type{T: abi.UintTy, Size: 256}},
-		{Type: abi.Type{T: abi.BytesTy}},
-	}
-
-	packed, err := arguments.Pack(address, value, data)
-	if err != nil {
-		return nil, err
-	}
-	return packed, nil
-}
-
-// func smartAccountInstallRecoveryModule(module common.Address, data []byte) ([]byte, error) {
-// 	calldataStr, err := polyabi.AbiEncode("installRecoveryModule(address,bytes)", []string{module.String(), string(data)})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return []byte(calldataStr), nil
-// }
-
-// func smartAccountInstallFallbackModule(id int64, module common.Address, data []byte) ([]byte, error) {
-// 	calldataStr, err := polyabi.AbiEncode("installModule(uint256,address,bytes)", []string{strconv.FormatInt(id, 10), module.String(), string(data)})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return []byte(calldataStr), nil
-// }
-
 
 // Source: https://github.com/etaaa/Golang-Ethereum-Personal-Sign/
 func personalSign(msgHash []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
