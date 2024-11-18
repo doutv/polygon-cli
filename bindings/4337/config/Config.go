@@ -31,8 +31,8 @@ var (
 
 // ConfigMetaData contains all meta data concerning the Config contract.
 var ConfigMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"target\",\"type\":\"address\"}],\"name\":\"AddressEmptyCode\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"ERC1967InvalidImplementation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ERC1967NonPayable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedInnerCall\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidBundler\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidInitialization\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NotInitializing\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"UUPSUnauthorizedCallContext\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"slot\",\"type\":\"bytes32\"}],\"name\":\"UUPSUnsupportedProxiableUUID\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"version\",\"type\":\"uint64\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"singer\",\"type\":\"address\"}],\"name\":\"RecoverySignerUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"singleton\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"status\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"SetSafeSingleton\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"signer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"SetSenderSigner\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address[]\",\"name\":\"bundlers\",\"type\":\"address[]\"}],\"name\":\"WhitelistBundlerAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address[]\",\"name\":\"bundlers\",\"type\":\"address[]\"}],\"name\":\"WhitelistBundlerRemoved\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_CALLBACK_HANDLER\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"UPGRADE_INTERFACE_VERSION\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"singleton\",\"type\":\"address\"}],\"name\":\"addSafeSingleton\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"bundlers\",\"type\":\"address[]\"}],\"name\":\"addWhitelistedBundlers\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"defaultCallbackHandler\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"initialOwner\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"proxiableUUID\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"recoverySigner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"singleton\",\"type\":\"address\"}],\"name\":\"removeSafeSingleton\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"bundlers\",\"type\":\"address[]\"}],\"name\":\"removeWhitelistedBundlers\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"safeSingleton\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"signer\",\"type\":\"address\"}],\"name\":\"setRecoverySigner\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"eoaSigner\",\"type\":\"address\"}],\"name\":\"setWalletSigner\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"walletSigners\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"whitelistedBundler\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
-	Bin: "0x60a0806040523460c857306080527ff0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a009081549060ff8260401c1660b957506001600160401b036002600160401b0319828216016075575b604051610e1e90816100ce82396080518181816105c601526106a60152f35b6001600160401b031990911681179091556040519081527fc7f505b2f371ae2175ee4913f4499e1f2633a7b5936321eed1cdaeb6115181d290602090a13880806056565b63f92ee8a960e01b8152600490fd5b600080fdfe6040608081526004908136101561001557600080fd5b600091823560e01c90816303087a5714610a7557816316b97e9a146109f2578163485cc955146108955781634f1ef2861461062a57816352d1902d146105b15781635eb43cb5146105735781637063908f146104ee578163715018a6146104845781637910c00b1461045c5781637a1c84491461042157816387ab75e8146103645781638da5cb5b1461032e5781639de78db2146102f0578163ad3cb1cc14610251578163be08382114610229578163ee3a5fab146101a657508063f2fde38b146101765763fcdc4727146100e957600080fd5b34610172576100f736610b59565b90610100610ceb565b8151835b81811061014257847f49bd286efd7e26d327db1b6f433560c5f6156363198289a65a6ca9904338f4f461013c86865191829182610c32565b0390a180f35b6001600160a01b036101548286610c08565b5116855260016020819052838620805460ff19168217905501610104565b5080fd5b82346101a35760203660031901126101a3576101a0610193610af0565b61019b610ceb565b610c77565b80f35b80fd5b91905034610225576020366003190112610225576101c2610af0565b6101ca610ceb565b6001600160a01b03169182156102175780546001600160a01b03191683179055519081527f75da6d4a6a549915e7b28de22af1418486fc73dc2359d7a6851a3ceca2982a6b90602090a180f35b905163e6c4247b60e01b8152fd5b8280fd5b9050346102255782600319360112610225575490516001600160a01b03909116815260209150f35b9050346102255782600319360112610225578151908282019082821067ffffffffffffffff8311176102dd5750825260058152602090640352e302e360dc1b6020820152825193849260208452825192836020860152825b8481106102c757505050828201840152601f01601f19168101030190f35b81810183015188820188015287955082016102a9565b634e487b7160e01b855260419052602484fd5b5050346101725760203660031901126101725760209160ff9082906001600160a01b0361031b610af0565b1681526001855220541690519015158152f35b505034610172578160031936011261017257600080516020610dc98339815191525490516001600160a01b039091168152602090f35b9190503461022557806003193601126102255761037f610af0565b6001600160a01b039081610391610b0b565b1693841561041357328652600160205260ff8487205416156104055750168084526002602090815282852080546001600160a01b03191685179055825191825281019290925242908201527f03b72cb2fffc620d2a9c4f6bce0636faa82c948488a45f2f4b0684bb17cfdc7290606090a180f35b835163f8a0c54b60e01b8152fd5b835163e6c4247b60e01b8152fd5b505034610172576020366003190112610172576020916001600160a01b039082908261044b610af0565b168152600285522054169051908152f35b505034610172578160031936011261017257905490516001600160a01b039091168152602090f35b83346101a357806003193601126101a35761049d610ceb565b600080516020610dc983398151915280546001600160a01b0319811690915581906001600160a01b03167f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e08280a380f35b919050346102255760203660031901126102255761050a610af0565b610512610ceb565b6001600160a01b03169182156102175750816060917ff80dbc7f86c01c1d15ec0c595ff86fcfe195a0a197a73e1a45f1d52f804061919385526003602052808520600160ff198254161790558051918252600160208301524290820152a180f35b5050346101725760203660031901126101725760209160ff9082906001600160a01b0361059e610af0565b1681526003855220541690519015158152f35b8284346101a357806003193601126101a357507f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316300361061d57602090517f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc8152f35b5163703e46dd60e11b8152fd5b9180915060031936011261022557610640610af0565b90602493843567ffffffffffffffff81116101725736602382011215610172578085013561066d81610bec565b9461067a85519687610b21565b81865260209182870193368a8383010111610891578186928b8693018737880101526001600160a01b037f00000000000000000000000000000000000000000000000000000000000000008116308114908115610863575b50610853576106df610ceb565b81169585516352d1902d60e01b815283818a818b5afa869181610820575b50610719575050505050505191634c9c8ce360e01b8352820152fd5b9088888894938c7f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc9182810361080b5750853b156107f7575080546001600160a01b031916821790558451889392917fbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b8580a28251156107d95750506107cb9582915190845af4913d156107cf573d6107bd6107b482610bec565b92519283610b21565b81528581943d92013e610d65565b5080f35b5060609250610d65565b9550955050505050346107eb57505080f35b63b398979f60e01b8152fd5b8651634c9c8ce360e01b8152808501849052fd5b8751632a87526960e21b815280860191909152fd5b9091508481813d831161084c575b6108388183610b21565b81010312610848575190386106fd565b8680fd5b503d61082e565b855163703e46dd60e11b81528890fd5b9050817f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc54161415386106d2565b8580fd5b9050346102255781600319360112610225576108af610af0565b906108b8610b0b565b7ff0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a0092835460ff81871c16159367ffffffffffffffff8216801590816109ea575b60011490816109e0575b1590816109d7575b506109c9575067ffffffffffffffff1981166001178555610959929190846109aa575b5086546001600160a01b0319166001600160a01b0391909116178655610951610d24565b61019b610d24565b610961610d24565b610969578280f35b805468ff00000000000000001916905551600181527fc7f505b2f371ae2175ee4913f4499e1f2633a7b5936321eed1cdaeb6115181d290602090a138808280f35b68ffffffffffffffffff1916680100000000000000011785553861092d565b865163f92ee8a960e01b8152fd5b9050153861090a565b303b159150610902565b8691506108f8565b50503461017257610a0236610b59565b90610a0b610ceb565b8151835b818110610a4757847f623f7acab9936b83f17999b4d96bfda34b1d3a749bd474d39d0413cc977044ed61013c86865191829182610c32565b6001600160a01b03610a598286610c08565b5116855260016020819052838620805460ff1916905501610a0f565b5050346101725760203660031901126101725760607ff80dbc7f86c01c1d15ec0c595ff86fcfe195a0a197a73e1a45f1d52f8040619191610ab4610af0565b610abc610ceb565b6001600160a01b031680855260036020908152828620805460ff19169055825191825281018590524291810191909152a180f35b600435906001600160a01b0382168203610b0657565b600080fd5b602435906001600160a01b0382168203610b0657565b90601f8019910116810190811067ffffffffffffffff821117610b4357604052565b634e487b7160e01b600052604160045260246000fd5b602080600319830112610b065767ffffffffffffffff91600435838111610b065781602382011215610b06578060040135938411610b43578360051b9060405194610ba76020840187610b21565b855260246020860192820101928311610b0657602401905b828210610bcd575050505090565b81356001600160a01b0381168103610b06578152908301908301610bbf565b67ffffffffffffffff8111610b4357601f01601f191660200190565b8051821015610c1c5760209160051b010190565b634e487b7160e01b600052603260045260246000fd5b602090602060408183019282815285518094520193019160005b828110610c5a575050505090565b83516001600160a01b031685529381019392810192600101610c4c565b6001600160a01b03908116908115610cd257600080516020610dc983398151915280546001600160a01b031981168417909155167f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0600080a3565b604051631e4fbdf760e01b815260006004820152602490fd5b600080516020610dc9833981519152546001600160a01b03163303610d0c57565b60405163118cdaa760e01b8152336004820152602490fd5b60ff7ff0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a005460401c1615610d5357565b604051631afcd79f60e31b8152600490fd5b90610d8c5750805115610d7a57805190602001fd5b604051630a12f52160e11b8152600490fd5b81511580610dbf575b610d9d575090565b604051639996b31560e01b81526001600160a01b039091166004820152602490fd5b50803b15610d9556fe9016d09d72d40fdae2fd8ceac6b6234c7706214fd39c1cd1e609a0528c199300a2646970667358221220bff2ed44b38298e6351a5de4e1b24f06f99b0b867a45c534c89baa6d8e3fe30664736f6c63430008190033",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"defaultCallbackHandler\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"initialOwner\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"InvalidAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidBundler\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"singer\",\"type\":\"address\"}],\"name\":\"RecoverySignerUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"singleton\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"status\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"SetSafeSingleton\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"signer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"SetSenderSigner\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address[]\",\"name\":\"bundlers\",\"type\":\"address[]\"}],\"name\":\"WhitelistBundlerAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address[]\",\"name\":\"bundlers\",\"type\":\"address[]\"}],\"name\":\"WhitelistBundlerRemoved\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_CALLBACK_HANDLER\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"singleton\",\"type\":\"address\"}],\"name\":\"addSafeSingleton\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"bundlers\",\"type\":\"address[]\"}],\"name\":\"addWhitelistedBundlers\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"recoverySigner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"singleton\",\"type\":\"address\"}],\"name\":\"removeSafeSingleton\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"bundlers\",\"type\":\"address[]\"}],\"name\":\"removeWhitelistedBundlers\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"safeSingleton\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"signer\",\"type\":\"address\"}],\"name\":\"setRecoverySigner\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"eoaSigner\",\"type\":\"address\"}],\"name\":\"setWalletSigner\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"walletSigners\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"whitelistedBundler\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	Bin: "0x6080346100d557601f6108d338819003918201601f19168301916001600160401b038311848410176100da5780849260409485528339810103126100d5576020610048826100f0565b916001600160a01b0391829161005e91016100f0565b169081156100bc576000549260018060a01b03199280848616176000558260405195167f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0600080a3169060015416176001556107ce90816101058239f35b604051631e4fbdf760e01b815260006004820152602490fd5b600080fd5b634e487b7160e01b600052604160045260246000fd5b51906001600160a01b03821682036100d55756fe6040608081526004908136101561001557600080fd5b600091823560e01c90816303087a57146105b357816316b97e9a1461052f5781635eb43cb5146104f25781637063908f1461046f578163715018a6146104125781637910c00b146103e95781637a1c8449146103ae57816387ab75e8146102e85781638da5cb5b146102c05781639de78db214610282578163be08382114610259578163ee3a5fab146101d7578163f2fde38b1461014c575063fcdc4727146100bd57600080fd5b34610148576100cb36610647565b906100d461076c565b8151835b81811061011657847f49bd286efd7e26d327db1b6f433560c5f6156363198289a65a6ca9904338f4f461011086865191829182610727565b0390a180f35b6001600160a01b0361012882866106fd565b511685526002602052828520805460ff19166001908117909155016100d8565b5080fd5b9050346101d35760203660031901126101d35761016761062c565b9061017061076c565b6001600160a01b039182169283156101bd57505082546001600160a01b0319811683178455167f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e08380a380f35b51631e4fbdf760e01b8152908101849052602490fd5b8280fd5b919050346101d35760203660031901126101d3576101f361062c565b6101fb61076c565b6001600160a01b031691821561024b5750600580546001600160a01b03191683179055519081527f75da6d4a6a549915e7b28de22af1418486fc73dc2359d7a6851a3ceca2982a6b90602090a180f35b905163e6c4247b60e01b8152fd5b50503461014857816003193601126101485760055490516001600160a01b039091168152602090f35b5050346101485760203660031901126101485760209160ff9082906001600160a01b036102ad61062c565b1681526002855220541690519015158152f35b505034610148578160031936011261014857905490516001600160a01b039091168152602090f35b919050346101d357806003193601126101d35761030361062c565b6024356001600160a01b03818116949092918590036103aa57841561039c57328652600260205260ff84872054161561038e5750168084526003602090815282852080546001600160a01b03191685179055825191825281019290925242908201527f03b72cb2fffc620d2a9c4f6bce0636faa82c948488a45f2f4b0684bb17cfdc7290606090a180f35b835163f8a0c54b60e01b8152fd5b835163e6c4247b60e01b8152fd5b8580fd5b505034610148576020366003190112610148576020916001600160a01b03908290826103d861062c565b168152600385522054169051908152f35b50503461014857816003193601126101485760015490516001600160a01b039091168152602090f35b833461046c578060031936011261046c5761042b61076c565b80546001600160a01b03198116825581906001600160a01b03167f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e08280a380f35b80fd5b919050346101d35760203660031901126101d35761048b61062c565b61049361076c565b6001600160a01b031691821561024b57916060917ff80dbc7f86c01c1d15ec0c595ff86fcfe195a0a197a73e1a45f1d52f8040619193828652602052808520600160ff198254161790558051918252600160208301524290820152a180f35b9050346101d35760203660031901126101d35760209260ff918391906001600160a01b0361051e61062c565b168252855220541690519015158152f35b5050346101485761053f36610647565b9061054861076c565b8151835b81811061058457847f623f7acab9936b83f17999b4d96bfda34b1d3a749bd474d39d0413cc977044ed61011086865191829182610727565b6001906001600160a01b0361059982876106fd565b511686526002602052838620805460ff191690550161054c565b919050346101d35760203660031901126101d3577ff80dbc7f86c01c1d15ec0c595ff86fcfe195a0a197a73e1a45f1d52f80406191916060916105f461062c565b6105fc61076c565b6001600160a01b03168086526020928352818620805460ff1916905581519081529182018590524290820152a180f35b600435906001600160a01b038216820361064257565b600080fd5b6020806003198301126106425767ffffffffffffffff916004358381116106425781602382011215610642578060040135908482116106e7578160051b9160405195601f19603f850116870190878210908211176106e75760405285526024602086019282010192831161064257602401905b8282106106c8575050505090565b81356001600160a01b03811681036106425781529083019083016106ba565b634e487b7160e01b600052604160045260246000fd5b80518210156107115760209160051b010190565b634e487b7160e01b600052603260045260246000fd5b602090602060408183019282815285518094520193019160005b82811061074f575050505090565b83516001600160a01b031685529381019392810192600101610741565b6000546001600160a01b0316330361078057565b60405163118cdaa760e01b8152336004820152602490fdfea2646970667358221220f2d294bc808728b27b345d7c1cb476d3b42a0c324192f687c879ce2b981939e164736f6c63430008190033",
 }
 
 // ConfigABI is the input ABI used to generate the binding from.
@@ -44,7 +44,7 @@ var ConfigABI = ConfigMetaData.ABI
 var ConfigBin = ConfigMetaData.Bin
 
 // DeployConfig deploys a new Ethereum contract, binding an instance of Config to it.
-func DeployConfig(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Config, error) {
+func DeployConfig(auth *bind.TransactOpts, backend bind.ContractBackend, defaultCallbackHandler common.Address, initialOwner common.Address) (common.Address, *types.Transaction, *Config, error) {
 	parsed, err := ConfigMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, nil, nil, err
@@ -53,7 +53,7 @@ func DeployConfig(auth *bind.TransactOpts, backend bind.ContractBackend) (common
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(ConfigBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(ConfigBin), backend, defaultCallbackHandler, initialOwner)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -233,37 +233,6 @@ func (_Config *ConfigCallerSession) DEFAULTCALLBACKHANDLER() (common.Address, er
 	return _Config.Contract.DEFAULTCALLBACKHANDLER(&_Config.CallOpts)
 }
 
-// UPGRADEINTERFACEVERSION is a free data retrieval call binding the contract method 0xad3cb1cc.
-//
-// Solidity: function UPGRADE_INTERFACE_VERSION() view returns(string)
-func (_Config *ConfigCaller) UPGRADEINTERFACEVERSION(opts *bind.CallOpts) (string, error) {
-	var out []interface{}
-	err := _Config.contract.Call(opts, &out, "UPGRADE_INTERFACE_VERSION")
-
-	if err != nil {
-		return *new(string), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(string)).(*string)
-
-	return out0, err
-
-}
-
-// UPGRADEINTERFACEVERSION is a free data retrieval call binding the contract method 0xad3cb1cc.
-//
-// Solidity: function UPGRADE_INTERFACE_VERSION() view returns(string)
-func (_Config *ConfigSession) UPGRADEINTERFACEVERSION() (string, error) {
-	return _Config.Contract.UPGRADEINTERFACEVERSION(&_Config.CallOpts)
-}
-
-// UPGRADEINTERFACEVERSION is a free data retrieval call binding the contract method 0xad3cb1cc.
-//
-// Solidity: function UPGRADE_INTERFACE_VERSION() view returns(string)
-func (_Config *ConfigCallerSession) UPGRADEINTERFACEVERSION() (string, error) {
-	return _Config.Contract.UPGRADEINTERFACEVERSION(&_Config.CallOpts)
-}
-
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() view returns(address)
@@ -293,37 +262,6 @@ func (_Config *ConfigSession) Owner() (common.Address, error) {
 // Solidity: function owner() view returns(address)
 func (_Config *ConfigCallerSession) Owner() (common.Address, error) {
 	return _Config.Contract.Owner(&_Config.CallOpts)
-}
-
-// ProxiableUUID is a free data retrieval call binding the contract method 0x52d1902d.
-//
-// Solidity: function proxiableUUID() view returns(bytes32)
-func (_Config *ConfigCaller) ProxiableUUID(opts *bind.CallOpts) ([32]byte, error) {
-	var out []interface{}
-	err := _Config.contract.Call(opts, &out, "proxiableUUID")
-
-	if err != nil {
-		return *new([32]byte), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
-
-	return out0, err
-
-}
-
-// ProxiableUUID is a free data retrieval call binding the contract method 0x52d1902d.
-//
-// Solidity: function proxiableUUID() view returns(bytes32)
-func (_Config *ConfigSession) ProxiableUUID() ([32]byte, error) {
-	return _Config.Contract.ProxiableUUID(&_Config.CallOpts)
-}
-
-// ProxiableUUID is a free data retrieval call binding the contract method 0x52d1902d.
-//
-// Solidity: function proxiableUUID() view returns(bytes32)
-func (_Config *ConfigCallerSession) ProxiableUUID() ([32]byte, error) {
-	return _Config.Contract.ProxiableUUID(&_Config.CallOpts)
 }
 
 // RecoverySigner is a free data retrieval call binding the contract method 0xbe083821.
@@ -492,27 +430,6 @@ func (_Config *ConfigTransactorSession) AddWhitelistedBundlers(bundlers []common
 	return _Config.Contract.AddWhitelistedBundlers(&_Config.TransactOpts, bundlers)
 }
 
-// Initialize is a paid mutator transaction binding the contract method 0x485cc955.
-//
-// Solidity: function initialize(address defaultCallbackHandler, address initialOwner) returns()
-func (_Config *ConfigTransactor) Initialize(opts *bind.TransactOpts, defaultCallbackHandler common.Address, initialOwner common.Address) (*types.Transaction, error) {
-	return _Config.contract.Transact(opts, "initialize", defaultCallbackHandler, initialOwner)
-}
-
-// Initialize is a paid mutator transaction binding the contract method 0x485cc955.
-//
-// Solidity: function initialize(address defaultCallbackHandler, address initialOwner) returns()
-func (_Config *ConfigSession) Initialize(defaultCallbackHandler common.Address, initialOwner common.Address) (*types.Transaction, error) {
-	return _Config.Contract.Initialize(&_Config.TransactOpts, defaultCallbackHandler, initialOwner)
-}
-
-// Initialize is a paid mutator transaction binding the contract method 0x485cc955.
-//
-// Solidity: function initialize(address defaultCallbackHandler, address initialOwner) returns()
-func (_Config *ConfigTransactorSession) Initialize(defaultCallbackHandler common.Address, initialOwner common.Address) (*types.Transaction, error) {
-	return _Config.Contract.Initialize(&_Config.TransactOpts, defaultCallbackHandler, initialOwner)
-}
-
 // RemoveSafeSingleton is a paid mutator transaction binding the contract method 0x03087a57.
 //
 // Solidity: function removeSafeSingleton(address singleton) returns()
@@ -637,161 +554,6 @@ func (_Config *ConfigSession) TransferOwnership(newOwner common.Address) (*types
 // Solidity: function transferOwnership(address newOwner) returns()
 func (_Config *ConfigTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
 	return _Config.Contract.TransferOwnership(&_Config.TransactOpts, newOwner)
-}
-
-// UpgradeToAndCall is a paid mutator transaction binding the contract method 0x4f1ef286.
-//
-// Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
-func (_Config *ConfigTransactor) UpgradeToAndCall(opts *bind.TransactOpts, newImplementation common.Address, data []byte) (*types.Transaction, error) {
-	return _Config.contract.Transact(opts, "upgradeToAndCall", newImplementation, data)
-}
-
-// UpgradeToAndCall is a paid mutator transaction binding the contract method 0x4f1ef286.
-//
-// Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
-func (_Config *ConfigSession) UpgradeToAndCall(newImplementation common.Address, data []byte) (*types.Transaction, error) {
-	return _Config.Contract.UpgradeToAndCall(&_Config.TransactOpts, newImplementation, data)
-}
-
-// UpgradeToAndCall is a paid mutator transaction binding the contract method 0x4f1ef286.
-//
-// Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
-func (_Config *ConfigTransactorSession) UpgradeToAndCall(newImplementation common.Address, data []byte) (*types.Transaction, error) {
-	return _Config.Contract.UpgradeToAndCall(&_Config.TransactOpts, newImplementation, data)
-}
-
-// ConfigInitializedIterator is returned from FilterInitialized and is used to iterate over the raw logs and unpacked data for Initialized events raised by the Config contract.
-type ConfigInitializedIterator struct {
-	Event *ConfigInitialized // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *ConfigInitializedIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(ConfigInitialized)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(ConfigInitialized)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *ConfigInitializedIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *ConfigInitializedIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// ConfigInitialized represents a Initialized event raised by the Config contract.
-type ConfigInitialized struct {
-	Version uint64
-	Raw     types.Log // Blockchain specific contextual infos
-}
-
-// FilterInitialized is a free log retrieval operation binding the contract event 0xc7f505b2f371ae2175ee4913f4499e1f2633a7b5936321eed1cdaeb6115181d2.
-//
-// Solidity: event Initialized(uint64 version)
-func (_Config *ConfigFilterer) FilterInitialized(opts *bind.FilterOpts) (*ConfigInitializedIterator, error) {
-
-	logs, sub, err := _Config.contract.FilterLogs(opts, "Initialized")
-	if err != nil {
-		return nil, err
-	}
-	return &ConfigInitializedIterator{contract: _Config.contract, event: "Initialized", logs: logs, sub: sub}, nil
-}
-
-// WatchInitialized is a free log subscription operation binding the contract event 0xc7f505b2f371ae2175ee4913f4499e1f2633a7b5936321eed1cdaeb6115181d2.
-//
-// Solidity: event Initialized(uint64 version)
-func (_Config *ConfigFilterer) WatchInitialized(opts *bind.WatchOpts, sink chan<- *ConfigInitialized) (event.Subscription, error) {
-
-	logs, sub, err := _Config.contract.WatchLogs(opts, "Initialized")
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(ConfigInitialized)
-				if err := _Config.contract.UnpackLog(event, "Initialized", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseInitialized is a log parse operation binding the contract event 0xc7f505b2f371ae2175ee4913f4499e1f2633a7b5936321eed1cdaeb6115181d2.
-//
-// Solidity: event Initialized(uint64 version)
-func (_Config *ConfigFilterer) ParseInitialized(log types.Log) (*ConfigInitialized, error) {
-	event := new(ConfigInitialized)
-	if err := _Config.contract.UnpackLog(event, "Initialized", log); err != nil {
-		return nil, err
-	}
-	event.Raw = log
-	return event, nil
 }
 
 // ConfigOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the Config contract.
@@ -1347,150 +1109,6 @@ func (_Config *ConfigFilterer) WatchSetSenderSigner(opts *bind.WatchOpts, sink c
 func (_Config *ConfigFilterer) ParseSetSenderSigner(log types.Log) (*ConfigSetSenderSigner, error) {
 	event := new(ConfigSetSenderSigner)
 	if err := _Config.contract.UnpackLog(event, "SetSenderSigner", log); err != nil {
-		return nil, err
-	}
-	event.Raw = log
-	return event, nil
-}
-
-// ConfigUpgradedIterator is returned from FilterUpgraded and is used to iterate over the raw logs and unpacked data for Upgraded events raised by the Config contract.
-type ConfigUpgradedIterator struct {
-	Event *ConfigUpgraded // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *ConfigUpgradedIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(ConfigUpgraded)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(ConfigUpgraded)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *ConfigUpgradedIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *ConfigUpgradedIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// ConfigUpgraded represents a Upgraded event raised by the Config contract.
-type ConfigUpgraded struct {
-	Implementation common.Address
-	Raw            types.Log // Blockchain specific contextual infos
-}
-
-// FilterUpgraded is a free log retrieval operation binding the contract event 0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b.
-//
-// Solidity: event Upgraded(address indexed implementation)
-func (_Config *ConfigFilterer) FilterUpgraded(opts *bind.FilterOpts, implementation []common.Address) (*ConfigUpgradedIterator, error) {
-
-	var implementationRule []interface{}
-	for _, implementationItem := range implementation {
-		implementationRule = append(implementationRule, implementationItem)
-	}
-
-	logs, sub, err := _Config.contract.FilterLogs(opts, "Upgraded", implementationRule)
-	if err != nil {
-		return nil, err
-	}
-	return &ConfigUpgradedIterator{contract: _Config.contract, event: "Upgraded", logs: logs, sub: sub}, nil
-}
-
-// WatchUpgraded is a free log subscription operation binding the contract event 0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b.
-//
-// Solidity: event Upgraded(address indexed implementation)
-func (_Config *ConfigFilterer) WatchUpgraded(opts *bind.WatchOpts, sink chan<- *ConfigUpgraded, implementation []common.Address) (event.Subscription, error) {
-
-	var implementationRule []interface{}
-	for _, implementationItem := range implementation {
-		implementationRule = append(implementationRule, implementationItem)
-	}
-
-	logs, sub, err := _Config.contract.WatchLogs(opts, "Upgraded", implementationRule)
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(ConfigUpgraded)
-				if err := _Config.contract.UnpackLog(event, "Upgraded", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseUpgraded is a log parse operation binding the contract event 0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b.
-//
-// Solidity: event Upgraded(address indexed implementation)
-func (_Config *ConfigFilterer) ParseUpgraded(log types.Log) (*ConfigUpgraded, error) {
-	event := new(ConfigUpgraded)
-	if err := _Config.contract.UnpackLog(event, "Upgraded", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
