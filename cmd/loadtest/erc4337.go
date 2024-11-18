@@ -61,7 +61,7 @@ func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.Tr
 	// Deposit 1 ETH to EntryPoint
 	tops.Value = big.NewInt(1000000000000000000)
 	if _, err = erc4337Config.EntryPoint.Contract.DepositTo(tops, fromAddress); err != nil {
-		return
+		panic(err)
 	}
 	return
 }
@@ -85,7 +85,7 @@ func runERC4337Loadtest(ctx context.Context, c *ethclient.Client, nonce uint64, 
 	// send user operation
 	cops := new(bind.CallOpts)
 	if err = erc4337loadtest.SendUops(c, ctx, tops, cops, privateKey, &config); err != nil {
-		return
+		panic(err)
 	}
 	return
 }

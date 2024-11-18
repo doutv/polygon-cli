@@ -2,6 +2,8 @@ package erc4337loadtest
 
 import (
 	"context"
+	"fmt"
+	"math/big"
 	"reflect"
 
 	"github.com/0xPolygon/polygon-cli/bindings/4337/accountfactory"
@@ -57,7 +59,8 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		entrypoint.DeployEntryPoint,
 		entrypoint.NewEntryPoint,
 		func(contract *entrypoint.EntryPoint) (err error) {
-			return nil
+			_, err = contract.BalanceOf(cops, fromAddress)
+			return
 		},
 	)
 	if err != nil {
@@ -71,7 +74,8 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		helper.DeployHelper,
 		helper.NewHelper,
 		func(contract *helper.Helper) (err error) {
-			return nil
+			_, err = contract.GetBlocktimeStamp(cops)
+			return
 		},
 	)
 	if err != nil {
@@ -85,7 +89,8 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		tokenreceiver.DeployTokenReceiver,
 		tokenreceiver.NewTokenReceiver,
 		func(contract *tokenreceiver.TokenReceiver) (err error) {
-			return nil
+			_, err = contract.IsModuleType(cops, big.NewInt(0))
+			return
 		},
 	)
 	if err != nil {
@@ -101,7 +106,11 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		},
 		config.NewConfig,
 		func(contract *config.Config) (err error) {
-			return nil
+			owner, err := contract.Owner(cops)
+			if owner != fromAddress {
+				return fmt.Errorf("expected owner address %s, got %s", fromAddress, owner)
+			}
+			return
 		},
 	)
 	if err != nil {
@@ -117,7 +126,11 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		},
 		webauthnandecdsavalidator.NewWebAuthnAndECDSAValidator,
 		func(contract *webauthnandecdsavalidator.WebAuthnAndECDSAValidator) (err error) {
-			return nil
+			cfgAddress, err := contract.CONFIG(cops)
+			if cfgAddress != cfg.Config.Address {
+				return fmt.Errorf("expected config address %s, got %s", cfg.Config.Address, cfgAddress)
+			}
+			return
 		},
 	)
 	if err != nil {
@@ -133,7 +146,11 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		},
 		payableaccount.NewPayableAccount,
 		func(contract *payableaccount.PayableAccount) (err error) {
-			return nil
+			cfgAddress, err := contract.CONFIG(cops)
+			if cfgAddress != cfg.Config.Address {
+				return fmt.Errorf("expected config address %s, got %s", cfg.Config.Address, cfgAddress)
+			}
+			return
 		},
 	)
 	if err != nil {
@@ -149,7 +166,11 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		},
 		accountfactory.NewAccountFactory,
 		func(contract *accountfactory.AccountFactory) (err error) {
-			return nil
+			cfgAddress, err := contract.CONFIG(cops)
+			if cfgAddress != cfg.Config.Address {
+				return fmt.Errorf("expected config address %s, got %s", cfg.Config.Address, cfgAddress)
+			}
+			return
 		},
 	)
 	if err != nil {
