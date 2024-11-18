@@ -653,7 +653,7 @@ func mainLoop(ctx context.Context, c *ethclient.Client, rpc *ethrpc.Client) erro
 	var erc4337Config erc4337loadtest.ERC4337Config
 	if hasMode(loadTestModeERC4337, ltp.ParsedModes) {
 		erc4337Addresses := erc4337loadtest.ERC4337Addresses{
-			EntryPoint: ethcommon.HexToAddress(*erc4337LoadTestParams.EntryPoint),
+			EntryPoint:        ethcommon.HexToAddress(*erc4337LoadTestParams.EntryPoint),
 			AccountFactory:    ethcommon.HexToAddress(*erc4337LoadTestParams.AccountFactory),
 			PayableAccount:    ethcommon.HexToAddress(*erc4337LoadTestParams.PayableAccount),
 			WebAuthnValidator: ethcommon.HexToAddress(*erc4337LoadTestParams.WebAuthnAndECDSAValidator),

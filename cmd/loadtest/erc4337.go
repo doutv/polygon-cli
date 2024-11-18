@@ -41,26 +41,26 @@ var erc4337LoadTestCmd = &cobra.Command{
 func init() {
 	params := new(erc4337params)
 
-	params.EntryPoint = erc4337LoadTestCmd.Flags().StringP("entry-point", "", "", "The address of a pre-deployed EntryPoint contract")
-	erc4337LoadTestCmd.MarkFlagRequired("entry-point")
+	params.EntryPoint = erc4337LoadTestCmd.Flags().String("entry-point", "", "The address of a pre-deployed EntryPoint contract")
+	// erc4337LoadTestCmd.MarkFlagRequired("entry-point")
 
-	params.AccountFactory = erc4337LoadTestCmd.Flags().StringP("account-factory", "", "", "The address of a pre-deployed AccountFactory contract") 
-	erc4337LoadTestCmd.MarkFlagRequired("account-factory")
+	params.AccountFactory = erc4337LoadTestCmd.Flags().String("account-factory", "", "The address of a pre-deployed AccountFactory contract")
+	// erc4337LoadTestCmd.MarkFlagRequired("account-factory")
 
-	params.Config = erc4337LoadTestCmd.Flags().StringP("config", "", "", "The address of a pre-deployed Config contract")
-	erc4337LoadTestCmd.MarkFlagRequired("config")
+	params.Config = erc4337LoadTestCmd.Flags().String("config", "", "The address of a pre-deployed Config contract")
+	// erc4337LoadTestCmd.MarkFlagRequired("config")
 
-	params.Helper = erc4337LoadTestCmd.Flags().StringP("helper", "", "", "The address of a pre-deployed Helper contract")
-	erc4337LoadTestCmd.MarkFlagRequired("helper")
+	params.Helper = erc4337LoadTestCmd.Flags().String("helper", "", "The address of a pre-deployed Helper contract")
+	// erc4337LoadTestCmd.MarkFlagRequired("helper")
 
-	params.TokenReceiver = erc4337LoadTestCmd.Flags().StringP("token-receiver", "", "", "The address of a pre-deployed TokenReceiver contract")
-	erc4337LoadTestCmd.MarkFlagRequired("token-receiver")
+	params.TokenReceiver = erc4337LoadTestCmd.Flags().String("token-receiver", "", "The address of a pre-deployed TokenReceiver contract")
+	// erc4337LoadTestCmd.MarkFlagRequired("token-receiver")
 
-	params.WebAuthnAndECDSAValidator = erc4337LoadTestCmd.Flags().StringP("validator", "", "", "The address of a pre-deployed WebAuthnAndECDSAValidator contract")
-	erc4337LoadTestCmd.MarkFlagRequired("validator")
+	params.WebAuthnAndECDSAValidator = erc4337LoadTestCmd.Flags().String("validator", "", "The address of a pre-deployed WebAuthnAndECDSAValidator contract")
+	// erc4337LoadTestCmd.MarkFlagRequired("validator")
 
-	params.PayableAccount = erc4337LoadTestCmd.Flags().StringP("payable-account", "", "", "The address of a pre-deployed PayableAccount contract")
-	erc4337LoadTestCmd.MarkFlagRequired("payable-account")
+	params.PayableAccount = erc4337LoadTestCmd.Flags().String("payable-account", "", "The address of a pre-deployed PayableAccount contract")
+	// erc4337LoadTestCmd.MarkFlagRequired("payable-account")
 
 	erc4337LoadTestParams = *params
 }
@@ -69,7 +69,7 @@ func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.Tr
 	log.Debug().Msg("Deploying ERC4337 contracts...")
 	erc4337Config, err = erc4337loadtest.DeployContracts(ctx, c, tops, cops, erc4337Addresses)
 	if err != nil {
-		return
+		panic(err)
 	}
 	log.Debug().Interface("addresses", erc4337Config.GetAddresses()).Msg("ERC4337 contracts deployed")
 

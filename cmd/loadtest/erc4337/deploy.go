@@ -7,6 +7,7 @@ import (
 	"github.com/0xPolygon/polygon-cli/bindings/4337/accountfactory"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/config"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/entryPoint/core/entrypoint"
+	"github.com/0xPolygon/polygon-cli/bindings/4337/erc1967proxy"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/modules/fallbackhandlers/tokenreceiver"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/modules/validators/webauthnandecdsavalidator"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/payableaccount"
@@ -61,7 +62,7 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		},
 	)
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	log.Debug().Msg("Deploying Helper")
@@ -75,7 +76,7 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		},
 	)
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	log.Debug().Msg("Deploying TokenReceiver")
@@ -89,22 +90,33 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		},
 	)
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	log.Debug().Msg("Deploying Config")
 	cfg.Config.Address, cfg.Config.Contract, err = deployOrInstantiateContract(
 		ctx, client, tops, cops,
 		knownAddresses.Config,
-		// TODO: deploy UUPSUpgradeable
-		config.DeployConfig,
+		func(*bind.TransactOpts, bind.ContractBackend) (common.Address, *types.Transaction, *config.Config, error) {
+			// deploy a new UUPSUpgradeable contract, ignore some checkings
+			// https://github.com/OpenZeppelin/openzeppelin-upgrades/blob/b41336b157fb944ddd1e8743a6eaea314b6676f9/packages/plugin-hardhat/src/deploy-proxy.ts#L35
+			implAddr, _, impl, err := config.DeployConfig(tops, client)
+			if err != nil {
+				panic(err)
+			}
+			proxyAddr, _, proxy, err := erc1967proxy.DeployERC1967Proxy(tops, client, implAddr, nil)
+			if err != nil {
+				panic(err)
+			}
+			return proxyAddr, nil, proxy, nil
+		},
 		config.NewConfig,
 		func(contract *config.Config) (err error) {
 			return nil
 		},
 	)
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	log.Debug().Msg("Deploying WebAuthnAndECDSAValidator")
@@ -120,7 +132,7 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		},
 	)
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	log.Debug().Msg("Deploying PayableAccount")
@@ -136,7 +148,7 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		},
 	)
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	log.Debug().Msg("Deploying AccountFactory")
@@ -153,16 +165,16 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		},
 	)
 	if err != nil {
-		return
+		panic(err)
 	}
 
 	// Configure contracts
 	log.Debug().Msg("Configuring contracts")
 	if _, err = cfg.Config.Contract.AddSafeSingleton(tops, cfg.PayableAccount.Address); err != nil {
-		return
+		panic(err)
 	}
 	if _, err = cfg.Config.Contract.AddWhitelistedBundlers(tops, []common.Address{tops.From}); err != nil {
-		return
+		panic(err)
 	}
 
 	return
