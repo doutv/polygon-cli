@@ -24,6 +24,7 @@ import (
 type (
 	// ERC4337Config represents the whole ERC4337 configuration (contracts and addresses)
 	ERC4337Config struct {
+		UopBatchSize      uint32
 		EntryPoint        ContractConfig[entrypoint.EntryPoint]
 		AccountFactory    ContractConfig[accountfactory.AccountFactory]
 		PayableAccount    ContractConfig[payableaccount.PayableAccount]

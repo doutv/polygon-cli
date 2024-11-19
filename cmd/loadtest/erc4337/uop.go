@@ -68,7 +68,7 @@ func SendUops(
 		panic(err)
 	}
 
-	userOps, err := generateUops(client, ctx, tops, cops, eoaPrivateKey, cfg, sender, 1, []byte(calldata), initCode)
+	userOps, err := generateUops(client, ctx, tops, cops, eoaPrivateKey, cfg, sender, []byte(calldata), initCode)
 	if err != nil {
 		return
 	}
@@ -147,11 +147,10 @@ func generateUops(
 	eoaPrivateKey *ecdsa.PrivateKey,
 	cfg *ERC4337Config,
 	sender common.Address,
-	count uint32,
 	callData []byte,
 	initCode []byte,
 ) ([]entrypoint.PackedUserOperation, error) {
-	if count == 0 {
+	if cfg.UopBatchSize == 0 {
 		return nil, fmt.Errorf("no uops to generate")
 	}
 
@@ -161,9 +160,9 @@ func generateUops(
 		return nil, fmt.Errorf("failed to get code at address: %v", err)
 	}
 
-	userOps := make([]entrypoint.PackedUserOperation, 0, count)
+	userOps := make([]entrypoint.PackedUserOperation, 0, cfg.UopBatchSize)
 
-	for i := uint32(0); i < count; i++ {
+	for i := uint32(0); i < cfg.UopBatchSize; i++ {
 		// Create base UserOperation
 		userOp := PackUserOp(UserOperation{
 			Sender:               sender,
@@ -179,7 +178,7 @@ func generateUops(
 			Signature:            nil,
 		})
 		// nonce++
-		tops.Nonce = new(big.Int).Add(tops.Nonce, big.NewInt(1))
+		// tops.Nonce = new(big.Int).Add(tops.Nonce, big.NewInt(1))
 
 		// Generate signature
 		sig, err := generateSignatureForUop(tops, cops, userOp, cfg.EntryPoint.Contract, cfg.Helper.Contract, eoaPrivateKey)

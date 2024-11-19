@@ -19,6 +19,7 @@ var (
 )
 
 type erc4337params struct {
+	UopBatchSize          *uint32
 	EntryPoint, AccountFactory, Config, Helper, TokenReceiver, WebAuthnAndECDSAValidator, PayableAccount *string
 }
 
@@ -40,6 +41,7 @@ var erc4337LoadTestCmd = &cobra.Command{
 
 func init() {
 	params := new(erc4337params)
+	params.UopBatchSize = erc4337LoadTestCmd.Flags().Uint32("uop-batch-size", 1, "The batch size of user operations")
 	params.EntryPoint = erc4337LoadTestCmd.Flags().String("entry-point", "", "The address of a pre-deployed EntryPoint contract")
 	params.AccountFactory = erc4337LoadTestCmd.Flags().String("account-factory", "", "The address of a pre-deployed AccountFactory contract")
 	params.Config = erc4337LoadTestCmd.Flags().String("config", "", "The address of a pre-deployed Config contract")
@@ -50,9 +52,10 @@ func init() {
 	erc4337LoadTestParams = *params
 }
 
-func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.TransactOpts, cops *bind.CallOpts, erc4337Addresses erc4337loadtest.ERC4337Addresses, fromAddress common.Address) (erc4337Config erc4337loadtest.ERC4337Config, err error) {
+func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.TransactOpts, cops *bind.CallOpts, erc4337Addresses erc4337loadtest.ERC4337Addresses, fromAddress common.Address, uopBatchSize uint32) (erc4337Config erc4337loadtest.ERC4337Config, err error) {
 	log.Debug().Msg("Deploying ERC4337 contracts...")
 	erc4337Config, err = erc4337loadtest.DeployContracts(ctx, c, tops, cops, erc4337Addresses, fromAddress)
+	erc4337Config.UopBatchSize = uopBatchSize
 	if err != nil {
 		panic(err)
 	}
