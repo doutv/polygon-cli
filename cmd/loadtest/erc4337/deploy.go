@@ -150,6 +150,10 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 			if cfgAddress != cfg.Config.Address {
 				return fmt.Errorf("expected config address %s, got %s", cfg.Config.Address, cfgAddress)
 			}
+			entrypointAddress, err := contract.ENTRYPOINT(cops)
+			if entrypointAddress != cfg.EntryPoint.Address {
+				return fmt.Errorf("expected entrypoint address %s, got %s", cfg.EntryPoint.Address, entrypointAddress)
+			}
 			return
 		},
 	)
@@ -170,6 +174,10 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 			if cfgAddress != cfg.Config.Address {
 				return fmt.Errorf("expected config address %s, got %s", cfg.Config.Address, cfgAddress)
 			}
+			owner, err := contract.Owner(cops)
+			if owner != fromAddress {
+				return fmt.Errorf("expected owner address %s, got %s", fromAddress, owner)
+			}
 			return
 		},
 	)
@@ -179,10 +187,12 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 
 	// Configure contracts
 	log.Debug().Msg("Configuring contracts")
-	if _, err = cfg.Config.Contract.AddSafeSingleton(tops, cfg.PayableAccount.Address); err != nil {
+	_, err = cfg.Config.Contract.AddSafeSingleton(tops, cfg.PayableAccount.Address)
+	if err != nil {
 		panic(err)
 	}
-	if _, err = cfg.Config.Contract.AddWhitelistedBundlers(tops, []common.Address{fromAddress}); err != nil {
+	_, err = cfg.Config.Contract.AddWhitelistedBundlers(tops, []common.Address{fromAddress})
+	if err != nil {
 		panic(err)
 	}
 
