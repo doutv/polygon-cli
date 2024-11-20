@@ -66,6 +66,12 @@ func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.Tr
 	if _, err = erc4337Config.EntryPoint.Contract.DepositTo(tops, fromAddress); err != nil {
 		panic(err)
 	}
+
+	// Create AA for sender, send init UOP
+	privateKey := inputLoadTestParams.ECDSAPrivateKey
+	if err = erc4337loadtest.SendInitUop(c, ctx, tops, cops, privateKey, &erc4337Config); err != nil {
+		panic(err)
+	}
 	return
 }
 

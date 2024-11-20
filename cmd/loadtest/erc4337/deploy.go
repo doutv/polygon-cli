@@ -32,6 +32,7 @@ type (
 		Config            ContractConfig[config.Config]
 		Helper            ContractConfig[helper.Helper]
 		TokenReceiver     ContractConfig[tokenreceiver.TokenReceiver]
+		Sender            common.Address // computed counterfactual address
 	}
 
 	// ERC4337Addresses is a subset of ERC4337Config. It represents the addresses of the whole
@@ -197,6 +198,17 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		panic(err)
 	}
 
+	// Calculate the sender address (counterfactual address)
+	sender, err := cfg.AccountFactory.Contract.ComputeAddress(
+		cops,
+		cfg.PayableAccount.Address,
+		salt,
+	)
+	if err != nil {
+		panic(err)
+	}
+	cfg.Sender = sender
+	
 	return
 }
 
@@ -250,6 +262,6 @@ func (c *ERC4337Config) GetAddresses() ERC4337Addresses {
 		WebAuthnValidator: c.WebAuthnValidator.Address,
 		Config:            c.Config.Address,
 		Helper:            c.Helper.Address,
-		TokenReceiver:   c.TokenReceiver.Address,
+		TokenReceiver:     c.TokenReceiver.Address,
 	}
 }

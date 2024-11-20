@@ -15,6 +15,7 @@ import (
 	"github.com/0xPolygon/polygon-cli/bindings/4337/test/helper"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -40,8 +41,19 @@ var passkeyPrivKey, _ = new(big.Int).SetString("42d2bd030a8a71ff2f9043adcfb46138
 
 var salt *big.Int
 var modeType [32]byte
+var emptyCalldata []byte
+
 func init() {
 	salt = big.NewInt(2)
+	// empty execution calldata
+	accountAbi, err := payableaccount.PayableAccountMetaData.GetAbi()
+	if err != nil {
+		panic(err)
+	}
+	emptyCalldata, err = accountAbi.Pack("execute", modeType, []byte{})
+	if err != nil {
+		panic(err)
+	}
 }
 
 func SendUops(
@@ -52,30 +64,99 @@ func SendUops(
 	eoaPrivateKey *ecdsa.PrivateKey,
 	cfg *ERC4337Config,
 ) (err error) {
-	// If account is not created, initcode is used
-	sender, initCode, err := generateInitcode(tops, cops, cfg, salt)
-	if err != nil {
-		return
-	}
-
-	// empty execution calldata
-	accountAbi, err := payableaccount.PayableAccountMetaData.GetAbi()
+	// Generate UOPs and send
+	userOps, err := generateUops(client, ctx, tops, cops, eoaPrivateKey, cfg, cfg.Sender, emptyCalldata, nil, cfg.UopBatchSize)
 	if err != nil {
 		panic(err)
 	}
-	calldata, err := accountAbi.Pack("execute", modeType, []byte{})
-	if err != nil {
-		panic(err)
-	}
-
-	userOps, err := generateUops(client, ctx, tops, cops, eoaPrivateKey, cfg, sender, []byte(calldata), initCode)
-	if err != nil {
-		return
-	}
-	// log.Trace().Interface("userOps", userOps).Msg("Sending user operations")
 	_, err = cfg.EntryPoint.Contract.HandleOps(tops, userOps, tops.From)
 	if err != nil {
-		return
+		return err
+	}
+
+	return nil
+}
+
+func SendInitUop(
+	client *ethclient.Client,
+	ctx context.Context,
+	tops *bind.TransactOpts,
+	cops *bind.CallOpts,
+	eoaPrivateKey *ecdsa.PrivateKey,
+	cfg *ERC4337Config,
+) (err error) {
+	// Generate initcode
+	initCode, err := generateInitcode(tops, cops, cfg, salt)
+	if err != nil {
+		panic(err)
+	}
+
+	// Deposit ETH to sender(contract)
+	nonce, err := client.PendingNonceAt(ctx, tops.From)
+	if err != nil {
+		panic(err)
+	}
+	amount := big.NewInt(1e16) // 0.01 ETH
+	gasPrice, err := client.SuggestGasPrice(ctx)
+	if err != nil {
+		panic(err)
+	}
+	tx := types.NewTransaction(nonce, cfg.Sender, amount, 50000, gasPrice, nil)
+	stx, err := tops.Signer(tops.From, tx)
+	if err != nil {
+		panic(err)
+	}
+	if err = client.SendTransaction(ctx, stx); err != nil {
+		panic(err)
+	}
+	receipt, err := bind.WaitMined(ctx, client, stx)
+	if err != nil {
+		panic(err)
+	}
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		panic(fmt.Errorf("transaction failed with logs: %v", receipt.Logs))
+	}
+
+	// Deposit sender ETH to entrypoint
+	nonce, err = client.PendingNonceAt(ctx, tops.From)
+	if err != nil {
+		panic(err)
+	}
+	tops.Nonce = new(big.Int).SetUint64(nonce)
+	tops.Value = amount
+	tx, err = cfg.EntryPoint.Contract.DepositTo(tops, cfg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	tops.Value = nil
+	receipt, err = bind.WaitMined(ctx, client, tx)
+	if err != nil {
+		panic(err)
+	}
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		panic(fmt.Errorf("transaction failed with logs: %v", receipt.Logs))
+	}
+
+	// Generate 1 uop and send
+	userOps, err := generateUops(client, ctx, tops, cops, eoaPrivateKey, cfg, cfg.Sender, emptyCalldata, initCode, 1)
+	if err != nil {
+		panic(err)
+	}
+	nonce, err = client.PendingNonceAt(ctx, tops.From)
+	if err != nil {
+		panic(err)
+	}
+	tops.Nonce = new(big.Int).SetUint64(nonce)
+	tx, err = cfg.EntryPoint.Contract.HandleOps(tops, userOps, tops.From)
+	if err != nil {
+		panic(err)
+	}
+	receipt, err = bind.WaitMined(ctx, client, tx)
+	if err != nil {
+		panic(err)
+	}
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		panic(fmt.Errorf("transaction failed with logs: %v", receipt.Logs))
 	}
 
 	return nil
@@ -86,28 +167,19 @@ func generateInitcode(
 	cops *bind.CallOpts,
 	cfg *ERC4337Config,
 	salt *big.Int,
-) (sender common.Address, initCode []byte, err error) {
-	// Calculate the sender address (counterfactual address)
-	sender, err = cfg.AccountFactory.Contract.ComputeAddress(
-		cops,
-		cfg.PayableAccount.Address,
-		salt,
-	)
+) (initCode []byte, err error) {
+	accountAbi, err := payableaccount.PayableAccountMetaData.GetAbi()
 	if err != nil {
 		panic(err)
 	}
-
-	// Create the initialization data for the account
-	// tx, err := cfg.PayableAccount.Contract.InstallRecoveryModule(topsNoSend, topsNoSend.From, []byte{})
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// installRecoveryModuleCalldata := tx.Data()
-	// tx, err = cfg.PayableAccount.Contract.InstallModule(topsNoSend, big.NewInt(3), cfg.TokenReceiver.Address, nil)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// installFallbackModuleCalldata := tx.Data()
+	installRecoveryModuleCalldata, err := accountAbi.Pack("installRecoveryModule", tops.From, []byte{})
+	if err != nil {
+		panic(err)
+	}
+	installFallbackModuleCalldata, err := accountAbi.Pack("installModule", big.NewInt(3), cfg.TokenReceiver.Address, []byte{})
+	if err != nil {
+		panic(err)
+	}
 
 	// Create the initcode
 	initializer0, _, err := cfg.Helper.Contract.GetAccountInitializer2(
@@ -117,8 +189,8 @@ func generateInitcode(
 		cfg.WebAuthnValidator.Address,
 		tops.From,
 		tops.From,
-		[]byte{},
-		[]byte{},
+		installRecoveryModuleCalldata,
+		installFallbackModuleCalldata,
 	)
 	if err != nil {
 		panic(err)
@@ -136,7 +208,7 @@ func generateInitcode(
 	if err != nil {
 		panic(err)
 	}
-	return sender, initcode, nil
+	return initcode, nil
 }
 
 func generateUops(
@@ -149,8 +221,9 @@ func generateUops(
 	sender common.Address,
 	callData []byte,
 	initCode []byte,
+	batchSize uint32,
 ) ([]entrypoint.PackedUserOperation, error) {
-	if cfg.UopBatchSize == 0 {
+	if batchSize == 0 {
 		return nil, fmt.Errorf("no uops to generate")
 	}
 
@@ -160,14 +233,20 @@ func generateUops(
 		return nil, fmt.Errorf("failed to get code at address: %v", err)
 	}
 
-	userOps := make([]entrypoint.PackedUserOperation, 0, cfg.UopBatchSize)
+	userOps := make([]entrypoint.PackedUserOperation, 0, batchSize)
 
-	for i := uint32(0); i < cfg.UopBatchSize; i++ {
+	for i := uint32(0); i < batchSize; i++ {
 		// Create base UserOperation
 		userOp := PackUserOp(UserOperation{
-			Sender:               sender,
-			Nonce:                tops.Nonce,
-			InitCode:             func() []byte { if code == nil { return initCode }; return nil }(),
+			Sender: sender,
+			// it is safe to use the same nonce for all UOPs, since uop nonce validation is disabled
+			Nonce: tops.Nonce,
+			InitCode: func() []byte {
+				if code == nil {
+					return initCode
+				}
+				return nil
+			}(),
 			CallData:             callData,
 			CallGasLimit:         big.NewInt(100000),
 			VerificationGasLimit: big.NewInt(2000000),
@@ -177,8 +256,6 @@ func generateUops(
 			PaymasterAndData:     nil,
 			Signature:            nil,
 		})
-		// nonce++
-		// tops.Nonce = new(big.Int).Add(tops.Nonce, big.NewInt(1))
 
 		// Generate signature
 		sig, err := generateSignatureForUop(tops, cops, userOp, cfg.EntryPoint.Contract, cfg.Helper.Contract, eoaPrivateKey)
@@ -195,35 +272,35 @@ func generateUops(
 
 // PackAccountGasLimits packs two gas limits into a single hex string
 func PackAccountGasLimits(verificationGasLimit, callGasLimit *big.Int) [32]byte {
-    // Pad both values to 16 bytes (128 bits) each
-    verificationGasHex := common.LeftPadBytes(verificationGasLimit.Bytes(), 16)
-    callGasHex := common.LeftPadBytes(callGasLimit.Bytes(), 16)
-    
-    // Concatenate the byte slices
-    return [32]byte(append(verificationGasHex, callGasHex...))
+	// Pad both values to 16 bytes (128 bits) each
+	verificationGasHex := common.LeftPadBytes(verificationGasLimit.Bytes(), 16)
+	callGasHex := common.LeftPadBytes(callGasLimit.Bytes(), 16)
+
+	// Concatenate the byte slices
+	return [32]byte(append(verificationGasHex, callGasHex...))
 }
 
 // PackUserOp packs a user operation into its compact form
 func PackUserOp(userOp UserOperation) entrypoint.PackedUserOperation {
-    accountGasLimits := PackAccountGasLimits(
-        userOp.VerificationGasLimit,
-        userOp.CallGasLimit,
-    )
-    gasFees := PackAccountGasLimits(
-        userOp.MaxPriorityFeePerGas,
-        userOp.MaxFeePerGas,
-    )
+	accountGasLimits := PackAccountGasLimits(
+		userOp.VerificationGasLimit,
+		userOp.CallGasLimit,
+	)
+	gasFees := PackAccountGasLimits(
+		userOp.MaxPriorityFeePerGas,
+		userOp.MaxFeePerGas,
+	)
 
-    return entrypoint.PackedUserOperation{
-        Sender:            userOp.Sender,
-        Nonce:            userOp.Nonce,
-        CallData:         userOp.CallData,
-        AccountGasLimits: accountGasLimits,
-        InitCode:         userOp.InitCode,
-        PreVerificationGas: userOp.PreVerificationGas,
-        GasFees:          gasFees,
-        PaymasterAndData: userOp.PaymasterAndData,
-    }
+	return entrypoint.PackedUserOperation{
+		Sender:             userOp.Sender,
+		Nonce:              userOp.Nonce,
+		CallData:           userOp.CallData,
+		AccountGasLimits:   accountGasLimits,
+		InitCode:           userOp.InitCode,
+		PreVerificationGas: userOp.PreVerificationGas,
+		GasFees:            gasFees,
+		PaymasterAndData:   userOp.PaymasterAndData,
+	}
 }
 
 func generateSignatureForUop(
