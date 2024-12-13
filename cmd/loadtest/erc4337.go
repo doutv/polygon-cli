@@ -61,8 +61,8 @@ func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.Tr
 	}
 	log.Debug().Interface("addresses", erc4337Config.GetAddresses()).Msg("ERC4337 contracts deployed")
 
-	// Deposit 1 ETH to EntryPoint
-	tops.Value = big.NewInt(1000000000000000000)
+	// Deposit 100 ETH to EntryPoint
+	tops.Value, _ = big.NewInt(0).SetString("100000000000000000000", 10)
 	if _, err = erc4337Config.EntryPoint.Contract.DepositTo(tops, fromAddress); err != nil {
 		panic(err)
 	}
@@ -94,7 +94,7 @@ func runERC4337Loadtest(ctx context.Context, c *ethclient.Client, nonce uint64, 
 	// send user operation
 	cops := new(bind.CallOpts)
 	if err = erc4337loadtest.SendUops(c, ctx, tops, cops, privateKey, &config); err != nil {
-		panic(err)
+		log.Error().Err(err).Msg("Failed to send user operations")
 	}
 	return
 }
