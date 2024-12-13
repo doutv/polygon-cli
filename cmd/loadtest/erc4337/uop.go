@@ -56,27 +56,6 @@ func init() {
 	}
 }
 
-func SendUops(
-	client *ethclient.Client,
-	ctx context.Context,
-	tops *bind.TransactOpts,
-	cops *bind.CallOpts,
-	eoaPrivateKey *ecdsa.PrivateKey,
-	cfg *ERC4337Config,
-) (err error) {
-	// Generate UOPs and send
-	userOps, err := generateUops(client, ctx, tops, cops, eoaPrivateKey, cfg, cfg.Sender, emptyCalldata, nil, cfg.UopBatchSize)
-	if err != nil {
-		panic(err)
-	}
-	_, err = cfg.EntryPoint.Contract.HandleOps(tops, userOps, tops.From)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func SendInitUop(
 	client *ethclient.Client,
 	ctx context.Context,
@@ -138,7 +117,7 @@ func SendInitUop(
 	}
 
 	// Generate 1 uop and send
-	userOps, err := generateUops(client, ctx, tops, cops, eoaPrivateKey, cfg, cfg.Sender, emptyCalldata, initCode, 1)
+	userOps, err := GenerateUops(client, ctx, tops, cops, eoaPrivateKey, cfg, initCode, 1)
 	if err != nil {
 		panic(err)
 	}
@@ -211,15 +190,13 @@ func generateInitcode(
 	return initcode, nil
 }
 
-func generateUops(
+func GenerateUops(
 	client *ethclient.Client,
 	ctx context.Context,
 	tops *bind.TransactOpts,
 	cops *bind.CallOpts,
 	eoaPrivateKey *ecdsa.PrivateKey,
 	cfg *ERC4337Config,
-	sender common.Address,
-	callData []byte,
 	initCode []byte,
 	batchSize uint32,
 ) ([]entrypoint.PackedUserOperation, error) {
@@ -228,7 +205,7 @@ func generateUops(
 	}
 
 	// Check if account needs initialization
-	code, err := client.CodeAt(ctx, sender, nil)
+	code, err := client.CodeAt(ctx, cfg.Sender, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get code at address: %v", err)
 	}
@@ -238,7 +215,7 @@ func generateUops(
 	for i := uint32(0); i < batchSize; i++ {
 		// Create base UserOperation
 		userOp := PackUserOp(UserOperation{
-			Sender: sender,
+			Sender: cfg.Sender,
 			// it is safe to use the same nonce for all UOPs, since uop nonce validation is disabled
 			Nonce: tops.Nonce,
 			InitCode: func() []byte {
@@ -247,7 +224,7 @@ func generateUops(
 				}
 				return nil
 			}(),
-			CallData:             callData,
+			CallData:             emptyCalldata,
 			CallGasLimit:         big.NewInt(100000),
 			VerificationGasLimit: big.NewInt(2000000),
 			PreVerificationGas:   big.NewInt(0),
@@ -311,8 +288,8 @@ func generateSignatureForUop(
 	helper *helper.Helper,
 	eoaPrivateKey *ecdsa.PrivateKey,
 ) ([]byte, error) {
-	// Calculate expiration time (10 minutes from now)
-	expireTime := big.NewInt(time.Now().Unix() + 600)
+	// Calculate expiration time (1 hour from now)
+	expireTime := big.NewInt(time.Now().Unix() + 3600)
 	validationData, err := helper.GetValidationData(cops, expireTime)
 	if err != nil {
 		panic(err)
