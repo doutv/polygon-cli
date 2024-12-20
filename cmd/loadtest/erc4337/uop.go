@@ -288,8 +288,8 @@ func generateSignatureForUop(
 	helper *helper.Helper,
 	eoaPrivateKey *ecdsa.PrivateKey,
 ) ([]byte, error) {
-	// Calculate expiration time (1 hour from now)
-	expireTime := big.NewInt(time.Now().Unix() + 3600)
+	// Calculate expiration time (1 day from now)
+	expireTime := big.NewInt(time.Now().Unix() + 86400)
 	validationData, err := helper.GetValidationData(cops, expireTime)
 	if err != nil {
 		panic(err)
