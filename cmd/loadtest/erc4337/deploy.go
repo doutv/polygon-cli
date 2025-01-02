@@ -7,10 +7,11 @@ import (
 	"reflect"
 
 	"github.com/0xPolygon/polygon-cli/bindings/4337/accountfactory"
+	"github.com/0xPolygon/polygon-cli/bindings/4337/aggregator/passkeyaggregator"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/config"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/entryPoint/core/entrypoint"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/modules/fallbackhandlers/tokenreceiver"
-	"github.com/0xPolygon/polygon-cli/bindings/4337/modules/validators/webauthnandecdsavalidator"
+	"github.com/0xPolygon/polygon-cli/bindings/4337/modules/validators/ecdsavalidator"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/payableaccount"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/test/helper"
 	"github.com/0xPolygon/polygon-cli/util"
@@ -24,21 +25,22 @@ import (
 type (
 	// ERC4337Config represents the whole ERC4337 configuration (contracts and addresses)
 	ERC4337Config struct {
-		UopBatchSize      uint32
-		EntryPoint        ContractConfig[entrypoint.EntryPoint]
-		AccountFactory    ContractConfig[accountfactory.AccountFactory]
-		PayableAccount    ContractConfig[payableaccount.PayableAccount]
-		WebAuthnValidator ContractConfig[webauthnandecdsavalidator.WebAuthnAndECDSAValidator]
-		Config            ContractConfig[config.Config]
-		Helper            ContractConfig[helper.Helper]
-		TokenReceiver     ContractConfig[tokenreceiver.TokenReceiver]
-		Sender            common.Address // computed counterfactual address
+		UopBatchSize   uint32
+		EntryPoint     ContractConfig[entrypoint.EntryPoint]
+		AccountFactory ContractConfig[accountfactory.AccountFactory]
+		PayableAccount ContractConfig[payableaccount.PayableAccount]
+		Validator      ContractConfig[ecdsavalidator.ECDSAValidator]
+		Config         ContractConfig[config.Config]
+		Helper         ContractConfig[helper.Helper]
+		TokenReceiver  ContractConfig[tokenreceiver.TokenReceiver]
+		Aggregator     ContractConfig[passkeyaggregator.PasskeyAggregator]
+		Sender         common.Address // computed counterfactual address
 	}
 
 	// ERC4337Addresses is a subset of ERC4337Config. It represents the addresses of the whole
 	// ERC4337 configuration.
 	ERC4337Addresses struct {
-		EntryPoint, AccountFactory, PayableAccount, WebAuthnValidator, Config, Helper, TokenReceiver common.Address
+		EntryPoint, AccountFactory, PayableAccount, Validator, Config, Helper, TokenReceiver, Aggregator common.Address
 	}
 
 	// ContractConfig represents a contract and its address.
@@ -49,7 +51,7 @@ type (
 
 	// Contract represents an ERC4337 contract
 	Contract interface {
-		entrypoint.EntryPoint | accountfactory.AccountFactory | payableaccount.PayableAccount | webauthnandecdsavalidator.WebAuthnAndECDSAValidator | config.Config | helper.Helper | tokenreceiver.TokenReceiver
+		entrypoint.EntryPoint | accountfactory.AccountFactory | payableaccount.PayableAccount | ecdsavalidator.ECDSAValidator | config.Config | helper.Helper | tokenreceiver.TokenReceiver | passkeyaggregator.PasskeyAggregator
 	}
 )
 
@@ -99,6 +101,22 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		panic(err)
 	}
 
+	log.Debug().Msg("Deploying Aggregator")
+	cfg.Aggregator.Address, cfg.Aggregator.Contract, err = deployOrInstantiateContract(
+		ctx, client, tops, cops,
+		knownAddresses.Aggregator,
+		func(*bind.TransactOpts, bind.ContractBackend) (common.Address, *types.Transaction, *passkeyaggregator.PasskeyAggregator, error) {
+			return passkeyaggregator.DeployPasskeyAggregator(tops, client, cfg.EntryPoint.Address)
+		},
+		passkeyaggregator.NewPasskeyAggregator,
+		func(contract *passkeyaggregator.PasskeyAggregator) (err error) {
+			return
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
 	log.Debug().Msg("Deploying Config")
 	cfg.Config.Address, cfg.Config.Contract, err = deployOrInstantiateContract(
 		ctx, client, tops, cops,
@@ -120,18 +138,14 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 	}
 
 	log.Debug().Msg("Deploying WebAuthnAndECDSAValidator")
-	cfg.WebAuthnValidator.Address, cfg.WebAuthnValidator.Contract, err = deployOrInstantiateContract(
+	cfg.Validator.Address, cfg.Validator.Contract, err = deployOrInstantiateContract(
 		ctx, client, tops, cops,
-		knownAddresses.WebAuthnValidator,
-		func(*bind.TransactOpts, bind.ContractBackend) (common.Address, *types.Transaction, *webauthnandecdsavalidator.WebAuthnAndECDSAValidator, error) {
-			return webauthnandecdsavalidator.DeployWebAuthnAndECDSAValidator(tops, client, cfg.Config.Address)
+		knownAddresses.Validator,
+		func(*bind.TransactOpts, bind.ContractBackend) (common.Address, *types.Transaction, *ecdsavalidator.ECDSAValidator, error) {
+			return ecdsavalidator.DeployECDSAValidator(tops, client)
 		},
-		webauthnandecdsavalidator.NewWebAuthnAndECDSAValidator,
-		func(contract *webauthnandecdsavalidator.WebAuthnAndECDSAValidator) (err error) {
-			cfgAddress, err := contract.CONFIG(cops)
-			if cfgAddress != cfg.Config.Address {
-				return fmt.Errorf("expected config address %s, got %s", cfg.Config.Address, cfgAddress)
-			}
+		ecdsavalidator.NewECDSAValidator,
+		func(contract *ecdsavalidator.ECDSAValidator) (err error) {
 			return
 		},
 	)
@@ -208,7 +222,7 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		panic(err)
 	}
 	cfg.Sender = sender
-	
+
 	return
 }
 
@@ -259,9 +273,10 @@ func (c *ERC4337Config) GetAddresses() ERC4337Addresses {
 		EntryPoint:        c.EntryPoint.Address,
 		AccountFactory:    c.AccountFactory.Address,
 		PayableAccount:    c.PayableAccount.Address,
-		WebAuthnValidator: c.WebAuthnValidator.Address,
+		Validator:         c.Validator.Address,
 		Config:            c.Config.Address,
 		Helper:            c.Helper.Address,
 		TokenReceiver:     c.TokenReceiver.Address,
+		Aggregator:        c.Aggregator.Address,
 	}
 }

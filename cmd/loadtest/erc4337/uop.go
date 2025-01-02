@@ -13,9 +13,9 @@ import (
 	"github.com/0xPolygon/polygon-cli/bindings/4337/entryPoint/core/entrypoint"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/payableaccount"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/test/helper"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -56,91 +56,6 @@ func init() {
 	}
 }
 
-func SendInitUop(
-	client *ethclient.Client,
-	ctx context.Context,
-	tops *bind.TransactOpts,
-	cops *bind.CallOpts,
-	eoaPrivateKey *ecdsa.PrivateKey,
-	cfg *ERC4337Config,
-) (err error) {
-	// Generate initcode
-	initCode, err := generateInitcode(tops, cops, cfg, salt)
-	if err != nil {
-		panic(err)
-	}
-
-	// Deposit ETH to sender(contract)
-	nonce, err := client.PendingNonceAt(ctx, tops.From)
-	if err != nil {
-		panic(err)
-	}
-	amount := big.NewInt(1e16) // 0.01 ETH
-	gasPrice, err := client.SuggestGasPrice(ctx)
-	if err != nil {
-		panic(err)
-	}
-	tx := types.NewTransaction(nonce, cfg.Sender, amount, 50000, gasPrice, nil)
-	stx, err := tops.Signer(tops.From, tx)
-	if err != nil {
-		panic(err)
-	}
-	if err = client.SendTransaction(ctx, stx); err != nil {
-		panic(err)
-	}
-	receipt, err := bind.WaitMined(ctx, client, stx)
-	if err != nil {
-		panic(err)
-	}
-	if receipt.Status != types.ReceiptStatusSuccessful {
-		panic(fmt.Errorf("transaction failed with logs: %v", receipt.Logs))
-	}
-
-	// Deposit sender ETH to entrypoint
-	nonce, err = client.PendingNonceAt(ctx, tops.From)
-	if err != nil {
-		panic(err)
-	}
-	tops.Nonce = new(big.Int).SetUint64(nonce)
-	tops.Value = amount
-	tx, err = cfg.EntryPoint.Contract.DepositTo(tops, cfg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	tops.Value = nil
-	receipt, err = bind.WaitMined(ctx, client, tx)
-	if err != nil {
-		panic(err)
-	}
-	if receipt.Status != types.ReceiptStatusSuccessful {
-		panic(fmt.Errorf("transaction failed with logs: %v", receipt.Logs))
-	}
-
-	// Generate 1 uop and send
-	userOps, err := GenerateUops(client, ctx, tops, cops, eoaPrivateKey, cfg, initCode, 1)
-	if err != nil {
-		panic(err)
-	}
-	nonce, err = client.PendingNonceAt(ctx, tops.From)
-	if err != nil {
-		panic(err)
-	}
-	tops.Nonce = new(big.Int).SetUint64(nonce)
-	tx, err = cfg.EntryPoint.Contract.HandleOps(tops, userOps, tops.From)
-	if err != nil {
-		panic(err)
-	}
-	receipt, err = bind.WaitMined(ctx, client, tx)
-	if err != nil {
-		panic(err)
-	}
-	if receipt.Status != types.ReceiptStatusSuccessful {
-		panic(fmt.Errorf("transaction failed with logs: %v", receipt.Logs))
-	}
-
-	return nil
-}
-
 func generateInitcode(
 	tops *bind.TransactOpts,
 	cops *bind.CallOpts,
@@ -165,7 +80,7 @@ func generateInitcode(
 		cops,
 		passkeyPubX,
 		passkeyPubY,
-		cfg.WebAuthnValidator.Address,
+		cfg.Validator.Address,
 		tops.From,
 		tops.From,
 		installRecoveryModuleCalldata,
@@ -199,7 +114,7 @@ func GenerateUops(
 	cfg *ERC4337Config,
 	initCode []byte,
 	batchSize uint32,
-) ([]entrypoint.PackedUserOperation, error) {
+) ([]entrypoint.IEntryPointUserOpsPerAggregator, error) {
 	if batchSize == 0 {
 		return nil, fmt.Errorf("no uops to generate")
 	}
@@ -244,7 +159,20 @@ func GenerateUops(
 		userOps = append(userOps, userOp)
 	}
 
-	return userOps, nil
+	proof := getFixedZKProof()
+	encodedProof, err := encodeZKProof(proof)
+	if err != nil {
+		panic(err)
+	}
+
+	aggUserOps := []entrypoint.IEntryPointUserOpsPerAggregator{
+		{
+			UserOps:    userOps,
+			Aggregator: cfg.Aggregator.Address,
+			Signature:  encodedProof,
+		},
+	}
+	return aggUserOps, nil
 }
 
 // PackAccountGasLimits packs two gas limits into a single hex string
@@ -410,4 +338,74 @@ func personalSign(msgHash []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) 
 	}
 	signatureBytes[64] += 27
 	return signatureBytes, nil
+}
+
+// ZKProof represents a fixed zero-knowledge proof structure for testing
+type ZKProof struct {
+	Proof          [8]*big.Int
+	Commitments    [2]*big.Int
+	CommitmentPok  [2]*big.Int
+}
+
+// getFixedZKProof returns a hardcoded ZK proof for testing
+func getFixedZKProof() *ZKProof {
+	proof := [8]*big.Int{
+		hexToBigInt("0x068466E96FE3E43A47A45A219D48EBFFC731102FBF921BB681D929F8CCD7DCCD"),
+		hexToBigInt("0x18CA295C5AA34118E0D51A10514B1FEBDDD32C5655296B434AA8731A324081EA"),
+		hexToBigInt("0x124C3E2CBC52722EE1827E22B984BEC788D57BED83D02FB45E88A5F8DF402FC9"),
+		hexToBigInt("0x224878AB963945288E9EC5305622E6E9E4DDA3B8B859D0630B6095D6D67755DA"),
+		hexToBigInt("0x1AC0CC9A2C98ECB5DEDE94825D0FF08B8767E9B5FE13C843D16F423A18586484"),
+		hexToBigInt("0x14FF00434FB50F3716B5F2011C341175EEF7C0E8E478E9FAC850D10E63E97DB9"),
+		hexToBigInt("0x01F608E7E6620BDED6A2472EC329D0AFFE52ECD5E4AF62299476EEF15DD769B4"),
+		hexToBigInt("0x23E4C88D2AC7F2062AA77082A4BD9967A69590BF61A0AB657EA02EA35A10A97B"),
+	}
+	
+	commitments := [2]*big.Int{
+		hexToBigInt("0x032afc4fa24014e503d42052a52ff814628c7ee24cf555f1c08f09b365f98d42"),
+		hexToBigInt("0x157a2732c40aba0a752ba9b09c236b146f8166763dc6e596c021ede0650b034a"),
+	}
+	
+	commitmentPok := [2]*big.Int{
+		hexToBigInt("0x2d73a3ae1e7d1365ae44c36204fb9280dedcc250db8d4f24858a8969ed542b1d"),
+		hexToBigInt("0x228f0592b8f77f4d8ad72ff574af1b6e1afdcad2324cbbf1280d45a60a22226d"),
+	}
+
+	return &ZKProof{
+		Proof:         proof,
+		Commitments:   commitments,
+		CommitmentPok: commitmentPok,
+	}
+}
+
+// encodeZKProof encodes the ZK proof into ABI-encoded bytes
+func encodeZKProof(zkp *ZKProof) ([]byte, error) {
+	uint256Ty, _ := abi.NewType("uint256", "", nil)
+	
+	arguments := abi.Arguments{
+		{Type: arrayType(uint256Ty, 8)},
+		{Type: arrayType(uint256Ty, 2)},
+		{Type: arrayType(uint256Ty, 2)},
+	}
+
+	return arguments.Pack(
+		zkp.Proof,
+		zkp.Commitments,
+		zkp.CommitmentPok,
+	)
+}
+
+// Helper function to create fixed-size array types
+func arrayType(t abi.Type, size int) abi.Type {
+	return abi.Type{
+		T:          abi.ArrayTy,
+		Size:       size,
+		Elem:       &t,
+	}
+}
+
+// Helper function to convert hex string to big.Int
+func hexToBigInt(hex string) *big.Int {
+	n := new(big.Int)
+	n.SetString(hex[2:], 16) // Remove "0x" prefix
+	return n
 }

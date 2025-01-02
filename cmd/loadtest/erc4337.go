@@ -17,7 +17,7 @@ import (
 var (
 	erc4337Usage          string
 	erc4337LoadTestParams erc4337params
-	fixedUserOps               []entrypoint.PackedUserOperation
+	fixedAggUserOps        []entrypoint.IEntryPointUserOpsPerAggregator
 )
 
 type erc4337params struct {
@@ -63,17 +63,8 @@ func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.Tr
 	}
 	log.Debug().Interface("addresses", erc4337Config.GetAddresses()).Msg("ERC4337 contracts deployed")
 
-	// Deposit 100 ETH to EntryPoint
-	// tops.Value, _ = big.NewInt(0).SetString("10000000000000000", 10)
-	// if _, err = erc4337Config.EntryPoint.Contract.DepositTo(tops, fromAddress); err != nil {
-	// 	panic(err)
-	// }
-
 	// Create AA for sender, send init UOP
 	privateKey := inputLoadTestParams.ECDSAPrivateKey
-	// if err = erc4337loadtest.SendInitUop(c, ctx, tops, cops, privateKey, &erc4337Config); err != nil {
-	// 	panic(err)
-	// }
 
 	tops.Nonce = big.NewInt(0)
 	nonce, err := c.PendingNonceAt(ctx, tops.From)
@@ -81,7 +72,7 @@ func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.Tr
 		panic(err)
 	}
 	tops.Nonce = new(big.Int).SetUint64(nonce)
-	fixedUserOps, err = erc4337loadtest.GenerateUops(c, ctx, tops, cops, privateKey, &erc4337Config, nil, erc4337Config.UopBatchSize)
+	fixedAggUserOps, err = erc4337loadtest.GenerateUops(c, ctx, tops, cops, privateKey, &erc4337Config, nil, erc4337Config.UopBatchSize)
 	if err != nil {
 		panic(err)
 	}
@@ -105,7 +96,7 @@ func runERC4337Loadtest(nonce uint64, config erc4337loadtest.ERC4337Config) (t1 
 	defer func() { t2 = time.Now() }()
 
 	// send user operation
-	if _, err = config.EntryPoint.Contract.HandleOps(tops, fixedUserOps, tops.From); err != nil {
+	if _, err = config.EntryPoint.Contract.HandleAggregatedOps(tops, fixedAggUserOps, tops.From); err != nil {
 		log.Error().Err(err).Msg("Failed to send user operations")
 	}
 	return

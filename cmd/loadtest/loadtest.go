@@ -656,7 +656,7 @@ func mainLoop(ctx context.Context, c *ethclient.Client, rpc *ethrpc.Client) erro
 			EntryPoint:        ethcommon.HexToAddress(*erc4337LoadTestParams.EntryPoint),
 			AccountFactory:    ethcommon.HexToAddress(*erc4337LoadTestParams.AccountFactory),
 			PayableAccount:    ethcommon.HexToAddress(*erc4337LoadTestParams.PayableAccount),
-			WebAuthnValidator: ethcommon.HexToAddress(*erc4337LoadTestParams.WebAuthnAndECDSAValidator),
+			Validator:         ethcommon.HexToAddress(*erc4337LoadTestParams.WebAuthnAndECDSAValidator),
 			Config:            ethcommon.HexToAddress(*erc4337LoadTestParams.Config),
 			Helper:            ethcommon.HexToAddress(*erc4337LoadTestParams.Helper),
 			TokenReceiver:     ethcommon.HexToAddress(*erc4337LoadTestParams.TokenReceiver),
