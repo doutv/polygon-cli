@@ -35,25 +35,18 @@ type UserOperation struct {
 	Signature            []byte
 }
 
-var passkeyPubX, _ = new(big.Int).SetString("640c5cacef387563d0b105c7724c45ee19f8a952cb583de494a6a7ce5ed16760", 16)
-var passkeyPubY, _ = new(big.Int).SetString("142b33cbf8255e9f0628ab9e250e179a3e7e8e24e0a2a4340f0b9fdeb29a1b48", 16)
-var passkeyPrivKey, _ = new(big.Int).SetString("42d2bd030a8a71ff2f9043adcfb46138a5d87287cefff37d18a638f956c33449", 16)
+var (
+	passkeyPubX, _ = new(big.Int).SetString("640c5cacef387563d0b105c7724c45ee19f8a952cb583de494a6a7ce5ed16760", 16)
+	passkeyPubY, _ = new(big.Int).SetString("142b33cbf8255e9f0628ab9e250e179a3e7e8e24e0a2a4340f0b9fdeb29a1b48", 16)
+	passkeyPrivKey, _ = new(big.Int).SetString("42d2bd030a8a71ff2f9043adcfb46138a5d87287cefff37d18a638f956c33449", 16)
 
-var salt *big.Int
-var modeType [32]byte
-var emptyCalldata []byte
+	salt *big.Int
+	modeType [32]byte // 0x0000000000000000000000000000000000000000000000000000000000000000
+)
 
 func init() {
 	salt = big.NewInt(2)
-	// empty execution calldata
-	accountAbi, err := payableaccount.PayableAccountMetaData.GetAbi()
-	if err != nil {
-		panic(err)
-	}
-	emptyCalldata, err = accountAbi.Pack("execute", modeType, []byte{})
-	if err != nil {
-		panic(err)
-	}
+	modeType = [32]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 }
 
 func SendInitUop(
@@ -213,6 +206,12 @@ func GenerateUops(
 	userOps := make([]entrypoint.PackedUserOperation, 0, batchSize)
 
 	for i := uint32(0); i < batchSize; i++ {
+		// Generate random transfer calldata for each UOP
+		calldata, err := getRandomTransferCalldata()
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate random transfer calldata: %v", err)
+		}
+
 		// Create base UserOperation
 		userOp := PackUserOp(UserOperation{
 			Sender: cfg.Sender,
@@ -224,7 +223,7 @@ func GenerateUops(
 				}
 				return nil
 			}(),
-			CallData:             emptyCalldata,
+			CallData:             calldata,
 			CallGasLimit:         big.NewInt(100000),
 			VerificationGasLimit: big.NewInt(2000000),
 			PreVerificationGas:   big.NewInt(0),
@@ -410,4 +409,35 @@ func personalSign(msgHash []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) 
 	}
 	signatureBytes[64] += 27
 	return signatureBytes, nil
+}
+
+func getRandomTransferCalldata() ([]byte, error) {
+	accountAbi, err := payableaccount.PayableAccountMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate random address
+	randomAddrBytes := make([]byte, 20) // Ethereum addresses are 20 bytes
+	_, err = rand.Read(randomAddrBytes)
+	if err != nil {
+		return nil, err
+	}
+	randomAddr := common.BytesToAddress(randomAddrBytes)
+
+	// Generate random tranfer amount in wei between 0-999
+	randomAmount, err := rand.Int(rand.Reader, big.NewInt(1000))
+	if err != nil {
+		return nil, err
+	}
+
+	// Pack the parameters
+	executeCalldata := append(randomAddr.Bytes(), common.LeftPadBytes(randomAmount.Bytes(), 32)...)
+	executeCalldata = append(executeCalldata, []byte{}...) // Empty bytes
+	calldata, err := accountAbi.Pack("execute", modeType, executeCalldata)
+	if err != nil {
+		return nil, err
+	}
+
+	return calldata, nil
 }
