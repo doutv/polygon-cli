@@ -49,6 +49,7 @@ func init() {
 	modeType = [32]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 }
 
+// FIXME: Send Init UOP failed
 func SendInitUop(
 	client *ethclient.Client,
 	ctx context.Context,
@@ -411,6 +412,7 @@ func personalSign(msgHash []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) 
 	return signatureBytes, nil
 }
 
+// Tranfer to random address with random amount
 func getRandomTransferCalldata() ([]byte, error) {
 	accountAbi, err := payableaccount.PayableAccountMetaData.GetAbi()
 	if err != nil {
