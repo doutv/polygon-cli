@@ -31,8 +31,8 @@ var (
 
 // AccountProxyMetaData contains all meta data concerning the AccountProxy contract.
 var AccountProxyMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"contractIConfig\",\"name\":\"_config\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"result\",\"type\":\"string\"}],\"name\":\"AccountCreationFailed\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WalletInitialized\",\"type\":\"error\"},{\"stateMutability\":\"nonpayable\",\"type\":\"fallback\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_implementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"_initializer\",\"type\":\"bytes\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]",
-	Bin: "0x60a034606357601f6102df38819003918201601f19168301916001600160401b03831184841017606857808492602094604052833981010312606357516001600160a01b0381168103606357608052604051610260908161007f8239608051815050f35b600080fd5b634e487b7160e01b600052604160045260246000fdfe60806040526004361015610024575b361561001f5734156101eb57600080fd5b6101eb565b6000803560e01c63d1f578941461003b575061000e565b346100af5760403660031901126100af576004356001600160a01b03811681036100ab576024359067ffffffffffffffff908183116100a757366023840112156100a75782600401359182116100a75736602483850101116100a75760246100a4930190610111565b80f35b8380fd5b5080fd5b80fd5b634e487b7160e01b600052604160045260246000fd5b6020808252825181830181905290939260005b8281106100fd57505060409293506000838284010152601f8019910116010190565b8181018601518482016040015285016100db565b7f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc8054929390926001600160a01b03166101d95760009382859455816040519283928337810184815203915af43d156101d15767ffffffffffffffff903d8281116101cc5760405192601f8201601f19908116603f01168401908111848210176101cc5760405282523d6000602084013e5b156101ab5750565b604051633018224d60e21b81529081906101c890600483016100c8565b0390fd5b6100b2565b6060906101a3565b60405163c28d69c760e01b8152600490fd5b600036818037808036817f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc545af43d82803e15610226573d90f35b3d90fdfea264697066735822122058f0f8eb4a924f70bd7688d8b719e0c015fc0aae4f06b8a7f34ce91ee0d9998864736f6c63430008190033",
+	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"result\",\"type\":\"string\"}],\"name\":\"AccountCreationFailed\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"WalletInitialized\",\"type\":\"error\"},{\"stateMutability\":\"nonpayable\",\"type\":\"fallback\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_implementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"_initializer\",\"type\":\"bytes\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]",
+	Bin: "0x60808060405234601557610260908161001b8239f35b600080fdfe60806040526004361015610024575b361561001f5734156101eb57600080fd5b6101eb565b6000803560e01c63d1f578941461003b575061000e565b346100af5760403660031901126100af576004356001600160a01b03811681036100ab576024359067ffffffffffffffff908183116100a757366023840112156100a75782600401359182116100a75736602483850101116100a75760246100a4930190610111565b80f35b8380fd5b5080fd5b80fd5b634e487b7160e01b600052604160045260246000fd5b6020808252825181830181905290939260005b8281106100fd57505060409293506000838284010152601f8019910116010190565b8181018601518482016040015285016100db565b7f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc8054929390926001600160a01b03166101d95760009382859455816040519283928337810184815203915af43d156101d15767ffffffffffffffff903d8281116101cc5760405192601f8201601f19908116603f01168401908111848210176101cc5760405282523d6000602084013e5b156101ab5750565b604051633018224d60e21b81529081906101c890600483016100c8565b0390fd5b6100b2565b6060906101a3565b60405163c28d69c760e01b8152600490fd5b600036818037808036817f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc545af43d82803e15610226573d90f35b3d90fdfea2646970667358221220dbc2ad734b73b998278ed7bcd9ef361791ffe94471f015bd78d961860b387f4664736f6c63430008190033",
 }
 
 // AccountProxyABI is the input ABI used to generate the binding from.
@@ -44,7 +44,7 @@ var AccountProxyABI = AccountProxyMetaData.ABI
 var AccountProxyBin = AccountProxyMetaData.Bin
 
 // DeployAccountProxy deploys a new Ethereum contract, binding an instance of AccountProxy to it.
-func DeployAccountProxy(auth *bind.TransactOpts, backend bind.ContractBackend, _config common.Address) (common.Address, *types.Transaction, *AccountProxy, error) {
+func DeployAccountProxy(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *AccountProxy, error) {
 	parsed, err := AccountProxyMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, nil, nil, err
@@ -53,7 +53,7 @@ func DeployAccountProxy(auth *bind.TransactOpts, backend bind.ContractBackend, _
 		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(AccountProxyBin), backend, _config)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(AccountProxyBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
