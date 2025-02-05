@@ -3,8 +3,6 @@ package erc4337loadtest
 import (
 	"context"
 	"fmt"
-	"math/big"
-	"reflect"
 
 	"github.com/0xPolygon/polygon-cli/bindings/4337/accountfactory"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/config"
@@ -13,10 +11,9 @@ import (
 	"github.com/0xPolygon/polygon-cli/bindings/4337/modules/validators/webauthnandecdsavalidator"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/payableaccount"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/test/helper"
-	"github.com/0xPolygon/polygon-cli/util"
+	"github.com/0xPolygon/polygon-cli/bindings/4337/test/mock/mockrecoverymodule"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog/log"
 )
@@ -24,21 +21,22 @@ import (
 type (
 	// ERC4337Config represents the whole ERC4337 configuration (contracts and addresses)
 	ERC4337Config struct {
-		UopBatchSize      uint32
-		EntryPoint        ContractConfig[entrypoint.EntryPoint]
-		AccountFactory    ContractConfig[accountfactory.AccountFactory]
-		PayableAccount    ContractConfig[payableaccount.PayableAccount]
-		WebAuthnValidator ContractConfig[webauthnandecdsavalidator.WebAuthnAndECDSAValidator]
-		Config            ContractConfig[config.Config]
-		Helper            ContractConfig[helper.Helper]
-		TokenReceiver     ContractConfig[tokenreceiver.TokenReceiver]
-		Sender            common.Address // computed counterfactual address
+		UopBatchSize       uint32
+		EntryPoint         ContractConfig[entrypoint.EntryPoint]
+		AccountFactory     ContractConfig[accountfactory.AccountFactory]
+		PayableAccount     ContractConfig[payableaccount.PayableAccount]
+		WebAuthnValidator  ContractConfig[webauthnandecdsavalidator.WebAuthnAndECDSAValidator]
+		Config             ContractConfig[config.Config]
+		Helper             ContractConfig[helper.Helper]
+		TokenReceiver      ContractConfig[tokenreceiver.TokenReceiver]
+		MockRecoveryModule ContractConfig[mockrecoverymodule.MockRecoveryModule]
+		Sender             common.Address // computed counterfactual address
 	}
 
 	// ERC4337Addresses is a subset of ERC4337Config. It represents the addresses of the whole
 	// ERC4337 configuration.
 	ERC4337Addresses struct {
-		EntryPoint, AccountFactory, PayableAccount, WebAuthnValidator, Config, Helper, TokenReceiver common.Address
+		EntryPoint, AccountFactory, PayableAccount, WebAuthnValidator, Config, Helper, TokenReceiver, MockRecoveryModule common.Address
 	}
 
 	// ContractConfig represents a contract and its address.
@@ -49,153 +47,65 @@ type (
 
 	// Contract represents an ERC4337 contract
 	Contract interface {
-		entrypoint.EntryPoint | accountfactory.AccountFactory | payableaccount.PayableAccount | webauthnandecdsavalidator.WebAuthnAndECDSAValidator | config.Config | helper.Helper | tokenreceiver.TokenReceiver
+		entrypoint.EntryPoint | accountfactory.AccountFactory | payableaccount.PayableAccount | webauthnandecdsavalidator.WebAuthnAndECDSAValidator | config.Config | helper.Helper | tokenreceiver.TokenReceiver | mockrecoverymodule.MockRecoveryModule
 	}
 )
 
 func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.TransactOpts, cops *bind.CallOpts, knownAddresses ERC4337Addresses, fromAddress common.Address) (cfg ERC4337Config, err error) {
-	log.Debug().Msg("Deploying EntryPoint")
-	cfg.EntryPoint.Address, cfg.EntryPoint.Contract, err = deployOrInstantiateContract(
-		ctx, client, tops, cops,
-		knownAddresses.EntryPoint,
-		entrypoint.DeployEntryPoint,
-		entrypoint.NewEntryPoint,
-		func(contract *entrypoint.EntryPoint) (err error) {
-			_, err = contract.BalanceOf(cops, fromAddress)
-			return
-		},
-	)
+	log.Debug().Msg("Instantiating EntryPoint")
+	cfg.EntryPoint.Address = knownAddresses.EntryPoint
+	cfg.EntryPoint.Contract, err = entrypoint.NewEntryPoint(knownAddresses.EntryPoint, client)
 	if err != nil {
-		panic(err)
+		return cfg, fmt.Errorf("failed to instantiate EntryPoint: %w", err)
 	}
 
-	log.Debug().Msg("Deploying Helper")
-	cfg.Helper.Address, cfg.Helper.Contract, err = deployOrInstantiateContract(
-		ctx, client, tops, cops,
-		knownAddresses.Helper,
-		helper.DeployHelper,
-		helper.NewHelper,
-		func(contract *helper.Helper) (err error) {
-			_, err = contract.GetBlocktimeStamp(cops)
-			return
-		},
-	)
+	log.Debug().Msg("Instantiating Helper")
+	cfg.Helper.Address = knownAddresses.Helper
+	cfg.Helper.Contract, err = helper.NewHelper(knownAddresses.Helper, client)
 	if err != nil {
-		panic(err)
+		return cfg, fmt.Errorf("failed to instantiate Helper: %w", err)
 	}
 
-	log.Debug().Msg("Deploying TokenReceiver")
-	cfg.TokenReceiver.Address, cfg.TokenReceiver.Contract, err = deployOrInstantiateContract(
-		ctx, client, tops, cops,
-		knownAddresses.TokenReceiver,
-		tokenreceiver.DeployTokenReceiver,
-		tokenreceiver.NewTokenReceiver,
-		func(contract *tokenreceiver.TokenReceiver) (err error) {
-			_, err = contract.IsModuleType(cops, big.NewInt(0))
-			return
-		},
-	)
+	log.Debug().Msg("Instantiating TokenReceiver")
+	cfg.TokenReceiver.Address = knownAddresses.TokenReceiver
+	cfg.TokenReceiver.Contract, err = tokenreceiver.NewTokenReceiver(knownAddresses.TokenReceiver, client)
 	if err != nil {
-		panic(err)
+		return cfg, fmt.Errorf("failed to instantiate TokenReceiver: %w", err)
 	}
 
-	log.Debug().Msg("Deploying Config")
-	cfg.Config.Address, cfg.Config.Contract, err = deployOrInstantiateContract(
-		ctx, client, tops, cops,
-		knownAddresses.Config,
-		func(*bind.TransactOpts, bind.ContractBackend) (common.Address, *types.Transaction, *config.Config, error) {
-			return config.DeployConfig(tops, client, cfg.TokenReceiver.Address, fromAddress)
-		},
-		config.NewConfig,
-		func(contract *config.Config) (err error) {
-			owner, err := contract.Owner(cops)
-			if owner != fromAddress {
-				return fmt.Errorf("expected owner address %s, got %s", fromAddress, owner)
-			}
-			return
-		},
-	)
+	log.Debug().Msg("Instantiating Config")
+	cfg.Config.Address = knownAddresses.Config
+	cfg.Config.Contract, err = config.NewConfig(knownAddresses.Config, client)
 	if err != nil {
-		panic(err)
+		return cfg, fmt.Errorf("failed to instantiate Config: %w", err)
 	}
 
-	log.Debug().Msg("Deploying WebAuthnAndECDSAValidator")
-	cfg.WebAuthnValidator.Address, cfg.WebAuthnValidator.Contract, err = deployOrInstantiateContract(
-		ctx, client, tops, cops,
-		knownAddresses.WebAuthnValidator,
-		func(*bind.TransactOpts, bind.ContractBackend) (common.Address, *types.Transaction, *webauthnandecdsavalidator.WebAuthnAndECDSAValidator, error) {
-			return webauthnandecdsavalidator.DeployWebAuthnAndECDSAValidator(tops, client, cfg.Config.Address)
-		},
-		webauthnandecdsavalidator.NewWebAuthnAndECDSAValidator,
-		func(contract *webauthnandecdsavalidator.WebAuthnAndECDSAValidator) (err error) {
-			cfgAddress, err := contract.CONFIG(cops)
-			if cfgAddress != cfg.Config.Address {
-				return fmt.Errorf("expected config address %s, got %s", cfg.Config.Address, cfgAddress)
-			}
-			return
-		},
-	)
+	log.Debug().Msg("Instantiating WebAuthnAndECDSAValidator")
+	cfg.WebAuthnValidator.Address = knownAddresses.WebAuthnValidator
+	cfg.WebAuthnValidator.Contract, err = webauthnandecdsavalidator.NewWebAuthnAndECDSAValidator(knownAddresses.WebAuthnValidator, client)
 	if err != nil {
-		panic(err)
+		return cfg, fmt.Errorf("failed to instantiate WebAuthnAndECDSAValidator: %w", err)
 	}
 
-	log.Debug().Msg("Deploying PayableAccount")
-	cfg.PayableAccount.Address, cfg.PayableAccount.Contract, err = deployOrInstantiateContract(
-		ctx, client, tops, cops,
-		knownAddresses.PayableAccount,
-		func(*bind.TransactOpts, bind.ContractBackend) (common.Address, *types.Transaction, *payableaccount.PayableAccount, error) {
-			return payableaccount.DeployPayableAccount(tops, client, cfg.EntryPoint.Address, cfg.Config.Address)
-		},
-		payableaccount.NewPayableAccount,
-		func(contract *payableaccount.PayableAccount) (err error) {
-			cfgAddress, err := contract.CONFIG(cops)
-			if cfgAddress != cfg.Config.Address {
-				return fmt.Errorf("expected config address %s, got %s", cfg.Config.Address, cfgAddress)
-			}
-			entrypointAddress, err := contract.ENTRYPOINT(cops)
-			if entrypointAddress != cfg.EntryPoint.Address {
-				return fmt.Errorf("expected entrypoint address %s, got %s", cfg.EntryPoint.Address, entrypointAddress)
-			}
-			return
-		},
-	)
+	log.Debug().Msg("Instantiating PayableAccount")
+	cfg.PayableAccount.Address = knownAddresses.PayableAccount
+	cfg.PayableAccount.Contract, err = payableaccount.NewPayableAccount(knownAddresses.PayableAccount, client)
 	if err != nil {
-		panic(err)
+		return cfg, fmt.Errorf("failed to instantiate PayableAccount: %w", err)
 	}
 
-	log.Debug().Msg("Deploying AccountFactory")
-	cfg.AccountFactory.Address, cfg.AccountFactory.Contract, err = deployOrInstantiateContract(
-		ctx, client, tops, cops,
-		knownAddresses.AccountFactory,
-		func(*bind.TransactOpts, bind.ContractBackend) (common.Address, *types.Transaction, *accountfactory.AccountFactory, error) {
-			return accountfactory.DeployAccountFactory(tops, client, cfg.Config.Address, fromAddress)
-		},
-		accountfactory.NewAccountFactory,
-		func(contract *accountfactory.AccountFactory) (err error) {
-			cfgAddress, err := contract.CONFIG(cops)
-			if cfgAddress != cfg.Config.Address {
-				return fmt.Errorf("expected config address %s, got %s", cfg.Config.Address, cfgAddress)
-			}
-			owner, err := contract.Owner(cops)
-			if owner != fromAddress {
-				return fmt.Errorf("expected owner address %s, got %s", fromAddress, owner)
-			}
-			return
-		},
-	)
+	log.Debug().Msg("Instantiating AccountFactory")
+	cfg.AccountFactory.Address = knownAddresses.AccountFactory
+	cfg.AccountFactory.Contract, err = accountfactory.NewAccountFactory(knownAddresses.AccountFactory, client)
 	if err != nil {
-		panic(err)
+		return cfg, fmt.Errorf("failed to instantiate AccountFactory: %w", err)
 	}
 
-	// Configure contracts
-	log.Debug().Msg("Configuring contracts")
-	_, err = cfg.Config.Contract.AddSafeSingleton(tops, cfg.PayableAccount.Address)
+	log.Debug().Msg("Instantiating MockRecoveryModule")
+	cfg.MockRecoveryModule.Address = knownAddresses.MockRecoveryModule
+	cfg.MockRecoveryModule.Contract, err = mockrecoverymodule.NewMockRecoveryModule(knownAddresses.MockRecoveryModule, client)
 	if err != nil {
-		panic(err)
-	}
-	_, err = cfg.Config.Contract.AddWhitelistedBundlers(tops, []common.Address{fromAddress})
-	if err != nil {
-		panic(err)
+		return cfg, fmt.Errorf("failed to instantiate MockRecoveryModule: %w", err)
 	}
 
 	// Calculate the sender address (counterfactual address)
@@ -205,52 +115,11 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		salt,
 	)
 	if err != nil {
-		panic(err)
+		return cfg, fmt.Errorf("failed to compute sender address: %w", err)
 	}
 	cfg.Sender = sender
-	
-	return
-}
 
-// deployOrInstantiateContract deploys or instantiates a UniswapV3 contract.
-// If knownAddress is empty, it deploys the contract; otherwise, it instantiates it.
-func deployOrInstantiateContract[T Contract](
-	ctx context.Context,
-	c *ethclient.Client,
-	tops *bind.TransactOpts,
-	cops *bind.CallOpts,
-	knownAddress common.Address,
-	deploy func(*bind.TransactOpts, bind.ContractBackend) (common.Address, *types.Transaction, *T, error),
-	instantiate func(common.Address, bind.ContractBackend) (*T, error),
-	call func(*T) error,
-) (address common.Address, contract *T, err error) {
-	if knownAddress == (common.Address{}) {
-		// Deploy the contract if known address is empty.
-		address, _, contract, err = deploy(tops, c)
-		if err != nil {
-			log.Error().Err(err).Msg("Unable to deploy contract")
-			return
-		}
-		reflectedContractName := reflect.TypeOf(contract).Elem().Name()
-		log.Debug().Str("name", reflectedContractName).Interface("address", address).Msg("Contract deployed")
-	} else {
-		// Otherwise, instantiate the contract.
-		address = knownAddress
-		contract, err = instantiate(address, c)
-		if err != nil {
-			log.Error().Err(err).Msg("Unable to instantiate contract")
-			return
-		}
-		reflectedContractName := reflect.TypeOf(contract).Elem().Name()
-		log.Debug().Str("name", reflectedContractName).Msg("Contract instantiated")
-	}
-
-	// Check that the contract can be called.
-	err = util.BlockUntilSuccessful(ctx, c, func() error {
-		log.Trace().Msg("Contract is not available yet")
-		return call(contract)
-	})
-	return
+	return cfg, nil
 }
 
 // Return contracts addresses from the ERC4337 configuration.
@@ -263,5 +132,6 @@ func (c *ERC4337Config) GetAddresses() ERC4337Addresses {
 		Config:            c.Config.Address,
 		Helper:            c.Helper.Address,
 		TokenReceiver:     c.TokenReceiver.Address,
+		MockRecoveryModule: c.MockRecoveryModule.Address,
 	}
 }

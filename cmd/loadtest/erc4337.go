@@ -63,18 +63,7 @@ func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.Tr
 	}
 	log.Debug().Interface("addresses", erc4337Config.GetAddresses()).Msg("ERC4337 contracts deployed")
 
-	// Deposit 100 ETH to EntryPoint
-	// tops.Value, _ = big.NewInt(0).SetString("10000000000000000", 10)
-	// if _, err = erc4337Config.EntryPoint.Contract.DepositTo(tops, fromAddress); err != nil {
-	// 	panic(err)
-	// }
-
-	// Create AA for sender, send init UOP
 	privateKey := inputLoadTestParams.ECDSAPrivateKey
-	// if err = erc4337loadtest.SendInitUop(c, ctx, tops, cops, privateKey, &erc4337Config); err != nil {
-	// 	panic(err)
-	// }
-
 	tops.Nonce = big.NewInt(0)
 	nonce, err := c.PendingNonceAt(ctx, tops.From)
 	if err != nil {

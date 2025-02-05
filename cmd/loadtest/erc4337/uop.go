@@ -9,13 +9,11 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/0xPolygon/polygon-cli/bindings/4337/accountfactory"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/entryPoint/core/entrypoint"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/payableaccount"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/test/helper"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -49,140 +47,6 @@ func init() {
 	modeType = [32]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 }
 
-// FIXME: Send Init UOP failed
-func SendInitUop(
-	client *ethclient.Client,
-	ctx context.Context,
-	tops *bind.TransactOpts,
-	cops *bind.CallOpts,
-	eoaPrivateKey *ecdsa.PrivateKey,
-	cfg *ERC4337Config,
-) (err error) {
-	// Generate initcode
-	initCode, err := generateInitcode(tops, cops, cfg, salt)
-	if err != nil {
-		panic(err)
-	}
-
-	// Deposit ETH to sender(contract)
-	nonce, err := client.PendingNonceAt(ctx, tops.From)
-	if err != nil {
-		panic(err)
-	}
-	amount := big.NewInt(1e16) // 0.01 ETH
-	gasPrice, err := client.SuggestGasPrice(ctx)
-	if err != nil {
-		panic(err)
-	}
-	tx := types.NewTransaction(nonce, cfg.Sender, amount, 50000, gasPrice, nil)
-	stx, err := tops.Signer(tops.From, tx)
-	if err != nil {
-		panic(err)
-	}
-	if err = client.SendTransaction(ctx, stx); err != nil {
-		panic(err)
-	}
-	receipt, err := bind.WaitMined(ctx, client, stx)
-	if err != nil {
-		panic(err)
-	}
-	if receipt.Status != types.ReceiptStatusSuccessful {
-		panic(fmt.Errorf("transaction failed with logs: %v", receipt.Logs))
-	}
-
-	// Deposit sender ETH to entrypoint
-	nonce, err = client.PendingNonceAt(ctx, tops.From)
-	if err != nil {
-		panic(err)
-	}
-	tops.Nonce = new(big.Int).SetUint64(nonce)
-	tops.Value = amount
-	tx, err = cfg.EntryPoint.Contract.DepositTo(tops, cfg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	tops.Value = nil
-	receipt, err = bind.WaitMined(ctx, client, tx)
-	if err != nil {
-		panic(err)
-	}
-	if receipt.Status != types.ReceiptStatusSuccessful {
-		panic(fmt.Errorf("transaction failed with logs: %v", receipt.Logs))
-	}
-
-	// Generate 1 uop and send
-	userOps, err := GenerateUops(client, ctx, tops, cops, eoaPrivateKey, cfg, initCode, 1)
-	if err != nil {
-		panic(err)
-	}
-	nonce, err = client.PendingNonceAt(ctx, tops.From)
-	if err != nil {
-		panic(err)
-	}
-	tops.Nonce = new(big.Int).SetUint64(nonce)
-	tx, err = cfg.EntryPoint.Contract.HandleOps(tops, userOps, tops.From)
-	if err != nil {
-		panic(err)
-	}
-	receipt, err = bind.WaitMined(ctx, client, tx)
-	if err != nil {
-		panic(err)
-	}
-	if receipt.Status != types.ReceiptStatusSuccessful {
-		panic(fmt.Errorf("transaction failed with logs: %v", receipt.Logs))
-	}
-
-	return nil
-}
-
-func generateInitcode(
-	tops *bind.TransactOpts,
-	cops *bind.CallOpts,
-	cfg *ERC4337Config,
-	salt *big.Int,
-) (initCode []byte, err error) {
-	accountAbi, err := payableaccount.PayableAccountMetaData.GetAbi()
-	if err != nil {
-		panic(err)
-	}
-	installRecoveryModuleCalldata, err := accountAbi.Pack("installRecoveryModule", tops.From, []byte{})
-	if err != nil {
-		panic(err)
-	}
-	installFallbackModuleCalldata, err := accountAbi.Pack("installModule", big.NewInt(3), cfg.TokenReceiver.Address, []byte{})
-	if err != nil {
-		panic(err)
-	}
-
-	// Create the initcode
-	initializer0, _, err := cfg.Helper.Contract.GetAccountInitializer2(
-		cops,
-		passkeyPubX,
-		passkeyPubY,
-		cfg.WebAuthnValidator.Address,
-		tops.From,
-		tops.From,
-		installRecoveryModuleCalldata,
-		installFallbackModuleCalldata,
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	factoryAbi, err := accountfactory.AccountFactoryMetaData.GetAbi()
-	if err != nil {
-		panic(err)
-	}
-	calldata, err := factoryAbi.Pack("createAccount", cfg.PayableAccount.Address, initializer0, salt)
-	if err != nil {
-		panic(err)
-	}
-	initcode, err := cfg.Helper.Contract.EncodePacked(cops, cfg.AccountFactory.Address, calldata)
-	if err != nil {
-		panic(err)
-	}
-	return initcode, nil
-}
 
 func GenerateUops(
 	client *ethclient.Client,
@@ -350,6 +214,16 @@ func generateSignatureForUop(
 	if err != nil {
 		panic(fmt.Errorf("failed to sign message: %v", err))
 	}
+
+	// Normalize s value to be in lower half of curve order for compatibility
+	nDiv2 := new(big.Int)
+	nDiv2.SetString("57896044605178124381348723474703786764998477612067880171211129530534256022184", 10)
+	if s.Cmp(nDiv2) > 0 {
+		n := new(big.Int)
+		n.SetString("115792089210356248762697446949407573529996955224135760342422259061068512044369", 10)
+		s = new(big.Int).Sub(n, s)
+	}
+	
 	if !ecdsa.Verify(&passkeyPrivateKey.PublicKey, passkeyMsgHash[:], r, s) {
 		panic(fmt.Errorf("failed to verify passkey signature"))
 	}
