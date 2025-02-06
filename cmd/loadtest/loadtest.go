@@ -743,7 +743,7 @@ func mainLoop(ctx context.Context, c *ethclient.Client, rpc *ethrpc.Client) erro
 					swapAmountIn := big.NewInt(int64(*uniswapv3LoadTestParams.SwapAmountInput))
 					startReq, endReq, tErr = runUniswapV3Loadtest(ctx, c, myNonceValue, uniswapV3Config, poolConfig, swapAmountIn)
 				case loadTestModeERC4337:
-					startReq, endReq, tErr = runERC4337Loadtest(myNonceValue, erc4337Config)
+					startReq, endReq, tErr = runERC4337Loadtest(ctx, c, myNonceValue, erc4337Config)
 				default:
 					log.Error().Str("mode", mode.String()).Msg("We've arrived at a load test mode that we don't recognize")
 				}

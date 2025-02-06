@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/0xPolygon/polygon-cli/bindings/4337/entryPoint/core/entrypoint"
 	erc4337loadtest "github.com/0xPolygon/polygon-cli/cmd/loadtest/erc4337"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -17,7 +16,6 @@ import (
 var (
 	erc4337Usage          string
 	erc4337LoadTestParams erc4337params
-	fixedUserOps               []entrypoint.PackedUserOperation
 )
 
 type erc4337params struct {
@@ -62,22 +60,10 @@ func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.Tr
 		panic(err)
 	}
 	log.Debug().Interface("addresses", erc4337Config.GetAddresses()).Msg("ERC4337 contracts deployed")
-
-	privateKey := inputLoadTestParams.ECDSAPrivateKey
-	tops.Nonce = big.NewInt(0)
-	nonce, err := c.PendingNonceAt(ctx, tops.From)
-	if err != nil {
-		panic(err)
-	}
-	tops.Nonce = new(big.Int).SetUint64(nonce)
-	fixedUserOps, err = erc4337loadtest.GenerateUops(c, ctx, tops, cops, privateKey, &erc4337Config, nil, erc4337Config.UopBatchSize)
-	if err != nil {
-		panic(err)
-	}
 	return
 }
 
-func runERC4337Loadtest(nonce uint64, config erc4337loadtest.ERC4337Config) (t1 time.Time, t2 time.Time, err error) {
+func runERC4337Loadtest(ctx context.Context, c *ethclient.Client, nonce uint64, config erc4337loadtest.ERC4337Config) (t1 time.Time, t2 time.Time, err error) {
 	ltp := inputLoadTestParams
 	chainID := new(big.Int).SetUint64(*ltp.ChainID)
 	privateKey := ltp.ECDSAPrivateKey
@@ -90,11 +76,22 @@ func runERC4337Loadtest(nonce uint64, config erc4337loadtest.ERC4337Config) (t1 
 	tops.Nonce = new(big.Int).SetUint64(nonce)
 	tops = configureTransactOpts(tops)
 
+	cops := &bind.CallOpts{
+		From: tops.From,
+	}
+
 	t1 = time.Now()
 	defer func() { t2 = time.Now() }()
 
-	// send user operation
-	if _, err = config.EntryPoint.Contract.HandleOps(tops, fixedUserOps, tops.From); err != nil {
+	// Generate new user operations each time
+	userOps, err := erc4337loadtest.GenerateUops(c, ctx, tops, cops, privateKey, &config, nil, config.UopBatchSize)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to generate user operations")
+		return
+	}
+
+	// Send user operation
+	if _, err = config.EntryPoint.Contract.HandleOps(tops, userOps, tops.From); err != nil {
 		log.Error().Err(err).Msg("Failed to send user operations")
 	}
 	return

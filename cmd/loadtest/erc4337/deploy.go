@@ -118,6 +118,7 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		return cfg, fmt.Errorf("failed to compute sender address: %w", err)
 	}
 	cfg.Sender = sender
+	log.Info().Msgf("Sender address: %s", cfg.Sender.Hex())
 
 	return cfg, nil
 }

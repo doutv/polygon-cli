@@ -301,8 +301,8 @@ func getRandomTransferCalldata() ([]byte, error) {
 	}
 	randomAddr := common.BytesToAddress(randomAddrBytes)
 
-	// Generate random tranfer amount in wei between 0-999
-	randomAmount, err := rand.Int(rand.Reader, big.NewInt(1000))
+	// Generate random tranfer amount between [0, 10wei)
+	randomAmount, err := rand.Int(rand.Reader, big.NewInt(10))
 	if err != nil {
 		return nil, err
 	}
