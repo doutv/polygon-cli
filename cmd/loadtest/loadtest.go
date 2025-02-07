@@ -1748,14 +1748,17 @@ func waitForFinalBlock(ctx context.Context, c *ethclient.Client, rpc *ethrpc.Cli
 	for {
 		lastBlockNumber, err = c.BlockNumber(ctx)
 		if err != nil {
-			return 0, err
+			log.Error().Err(err).Msg("Unable to get block number")
+			time.Sleep(5 * time.Second)
 		}
 		if *ltp.CallOnly {
 			return lastBlockNumber, nil
 		}
 		currentNonceForFinalBlock, err = c.NonceAt(ctx, *ltp.FromETHAddress, new(big.Int).SetUint64(lastBlockNumber))
 		if err != nil {
-			return 0, err
+			currentNonceForFinalBlock = prevNonceForFinalBlock
+			log.Error().Err(err).Msg("Unable to get nonce at block number")
+			time.Sleep(5 * time.Second)
 		}
 		if currentNonceForFinalBlock < endNonce && maxWaitCount > 0 {
 			log.Trace().Uint64("endNonce", endNonce).Uint64("currentNonceForFinalBlock", currentNonceForFinalBlock).Uint64("prevNonceForFinalBlock", prevNonceForFinalBlock).Msg("Not all transactions have been mined. Waiting")

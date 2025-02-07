@@ -92,8 +92,8 @@ func GenerateUops(
 			CallGasLimit:         big.NewInt(100000),
 			VerificationGasLimit: big.NewInt(2000000),
 			PreVerificationGas:   big.NewInt(0),
-			MaxFeePerGas:         big.NewInt(1e9),
-			MaxPriorityFeePerGas: big.NewInt(1e9),
+			MaxFeePerGas:         big.NewInt(1),
+			MaxPriorityFeePerGas: big.NewInt(1),
 			PaymasterAndData:     nil,
 			Signature:            nil,
 		})
@@ -156,37 +156,37 @@ func generateSignatureForUop(
 	expireTime := big.NewInt(time.Now().Unix() + 86400)
 	validationData, err := helper.GetValidationData(cops, expireTime)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	// Verify validation date
 	_, outOfTimeRange, err := helper.CheckValidationDate(cops, validationData)
 	if err != nil || outOfTimeRange {
-		panic(fmt.Errorf("validation date check failed: %v", err))
+		return nil, fmt.Errorf("validation date check failed: %v", err)
 	}
 
 	// Get UserOp hash from EntryPoint
 	entrypointUopHash, err := entryPoint.GetUserOpHash(cops, userOp)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	// Encode UOP hash
 	uopHash, err := helper.EncodeUopHash(cops, entrypointUopHash, validationData)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// Generate EOA signature ECDSA-Secp256k1
 	eoaSignature, err := personalSign(uopHash[:], eoaPrivateKey)
 	if err != nil {
-		panic(fmt.Errorf("failed to sign message: %v", err))
+		return nil, fmt.Errorf("failed to sign message: %v", err)
 	}
 	// Verify EOA signature
 	recoverAddr, err := helper.RecoverAddress(cops, eoaSignature, uopHash)
 	if err != nil {
-		panic(fmt.Errorf("failed to verify EOA signature: %v", err))
+		return nil, fmt.Errorf("failed to verify EOA signature: %v", err)
 	}
 	if recoverAddr != tops.From {
-		panic(fmt.Sprintf("eoa recover address failed: expected %s, got %s", tops.From.Hex(), recoverAddr.Hex()))
+		return nil, fmt.Errorf("eoa recover address failed: expected %s, got %s", tops.From.Hex(), recoverAddr.Hex())
 	}
 
 	// Generate Passkey Signature ECDSA-Secp256r1 / P-256
@@ -199,7 +199,7 @@ func generateSignatureForUop(
 		uopHash,
 	)
 	if err != nil {
-		panic(fmt.Errorf("failed to get client json: %v", err))
+		return nil, fmt.Errorf("failed to get client json: %v", err)
 	}
 	passkeyMsgHash := clientJson.MessageHash
 	passkeyPrivateKey := &ecdsa.PrivateKey{
@@ -212,7 +212,7 @@ func generateSignatureForUop(
 	}
 	r, s, err := ecdsa.Sign(rand.Reader, passkeyPrivateKey, passkeyMsgHash[:])
 	if err != nil {
-		panic(fmt.Errorf("failed to sign message: %v", err))
+		return nil, fmt.Errorf("failed to sign message: %v", err)
 	}
 
 	// Normalize s value to be in lower half of curve order for compatibility
@@ -225,7 +225,7 @@ func generateSignatureForUop(
 	}
 	
 	if !ecdsa.Verify(&passkeyPrivateKey.PublicKey, passkeyMsgHash[:], r, s) {
-		panic(fmt.Errorf("failed to verify passkey signature"))
+		return nil, fmt.Errorf("failed to verify passkey signature")
 	}
 	// Verify passkey signature
 	/// 0 : PRECOMPILED_VERIFIER, helper validation passes, but handleops fails.
@@ -243,7 +243,7 @@ func generateSignatureForUop(
 		clientJson.ClientDataJSON,
 	)
 	if err != nil || !isVerifySuccess {
-		panic(fmt.Errorf("passkey verification failed: %v", err))
+		return nil, fmt.Errorf("passkey verification failed: %v", err)
 	}
 
 	// Encode passkey signature
@@ -255,7 +255,7 @@ func generateSignatureForUop(
 		clientJson.ClientDataJSON,
 	)
 	if err != nil {
-		panic(fmt.Errorf("failed to encode passkey signature: %v", err))
+		return nil, fmt.Errorf("failed to encode passkey signature: %v", err)
 	}
 
 	// Get final signature
@@ -268,7 +268,7 @@ func generateSignatureForUop(
 		validationData,
 	)
 	if err != nil {
-		panic(fmt.Errorf("failed to get final signature: %v", err))
+		return nil, fmt.Errorf("failed to get final signature: %v", err)
 	}
 
 	return signature, nil
