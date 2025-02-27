@@ -44,6 +44,13 @@ var (
 
 func init() {
 	salt = big.NewInt(2)
+	// Hardcoded 
+	//     const modeType = mode.encodeModeType(
+    //   mode.CallType.Batch,
+    //   mode.ExecType.Default,
+    //   mode.ModeSelector.Default,
+    //   "0x"
+    // );
 	modeType = [32]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 }
 
@@ -71,11 +78,9 @@ func GenerateUops(
 	userOps := make([]entrypoint.PackedUserOperation, 0, batchSize)
 
 	for i := uint32(0); i < batchSize; i++ {
-		// Generate random transfer calldata for each UOP
-		calldata, err := getRandomTransferCalldata()
-		if err != nil {
-			return nil, fmt.Errorf("failed to generate random transfer calldata: %v", err)
-		}
+		// Use a predefined calldata for ERC20 token operations (approve and transfer 1 token to 0x1111111111111111111111111111111111111111)
+		// This matches the calldata from the TypeScript implementation
+		calldata := common.FromHex("0xe9ae5c530100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000f05aa5dd8d33121e37b3bfe0b450ae46d195de62060000000000000000000000000000000000000000000000000000000000000000095ea7b300000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000de0b6b3a76400005aa5dd8d33121e37b3bfe0b450ae46d195de62060000000000000000000000000000000000000000000000000000000000000000a9059cbb00000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000")
 
 		// Create base UserOperation
 		userOp := PackUserOp(UserOperation{

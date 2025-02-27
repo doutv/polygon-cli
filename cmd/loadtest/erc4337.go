@@ -20,7 +20,7 @@ var (
 
 type erc4337params struct {
 	UopBatchSize          *uint32
-	EntryPoint, AccountFactory, Config, Helper, TokenReceiver, WebAuthnAndECDSAValidator, PayableAccount *string
+	EntryPoint, AccountFactory, Config, Helper, TokenReceiver, WebAuthnAndECDSAValidator, PayableAccount, Pay, TestERC20 *string
 }
 
 var erc4337LoadTestCmd = &cobra.Command{
@@ -49,6 +49,8 @@ func init() {
 	params.TokenReceiver = erc4337LoadTestCmd.Flags().String("token-receiver", "", "The address of a pre-deployed TokenReceiver contract")
 	params.WebAuthnAndECDSAValidator = erc4337LoadTestCmd.Flags().String("validator", "", "The address of a pre-deployed WebAuthnAndECDSAValidator contract")
 	params.PayableAccount = erc4337LoadTestCmd.Flags().String("payable-account", "", "The address of a pre-deployed PayableAccount contract")
+	params.Pay = erc4337LoadTestCmd.Flags().String("pay", "", "The address of a pre-deployed Pay contract")
+	params.TestERC20 = erc4337LoadTestCmd.Flags().String("test-erc20", "", "The address of a pre-deployed TestERC20 contract")
 	erc4337LoadTestParams = *params
 }
 

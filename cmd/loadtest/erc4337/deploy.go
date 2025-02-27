@@ -7,8 +7,10 @@ import (
 	"github.com/0xPolygon/polygon-cli/bindings/4337/accountfactory"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/config"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/entryPoint/core/entrypoint"
+	"github.com/0xPolygon/polygon-cli/bindings/4337/entryPoint/test/testerc20"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/modules/fallbackhandlers/tokenreceiver"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/modules/validators/webauthnandecdsavalidator"
+	"github.com/0xPolygon/polygon-cli/bindings/4337/pay/pay"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/payableaccount"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/test/helper"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/test/mock/mockrecoverymodule"
@@ -30,13 +32,15 @@ type (
 		Helper             ContractConfig[helper.Helper]
 		TokenReceiver      ContractConfig[tokenreceiver.TokenReceiver]
 		MockRecoveryModule ContractConfig[mockrecoverymodule.MockRecoveryModule]
+		Pay                ContractConfig[pay.Pay]
+		TestERC20          ContractConfig[testerc20.TestERC20]
 		Sender             common.Address // computed counterfactual address
 	}
 
 	// ERC4337Addresses is a subset of ERC4337Config. It represents the addresses of the whole
 	// ERC4337 configuration.
 	ERC4337Addresses struct {
-		EntryPoint, AccountFactory, PayableAccount, WebAuthnValidator, Config, Helper, TokenReceiver, MockRecoveryModule common.Address
+		EntryPoint, AccountFactory, PayableAccount, WebAuthnValidator, Config, Helper, TokenReceiver, MockRecoveryModule, Pay, TestERC20 common.Address
 	}
 
 	// ContractConfig represents a contract and its address.
@@ -47,7 +51,7 @@ type (
 
 	// Contract represents an ERC4337 contract
 	Contract interface {
-		entrypoint.EntryPoint | accountfactory.AccountFactory | payableaccount.PayableAccount | webauthnandecdsavalidator.WebAuthnAndECDSAValidator | config.Config | helper.Helper | tokenreceiver.TokenReceiver | mockrecoverymodule.MockRecoveryModule
+		entrypoint.EntryPoint | accountfactory.AccountFactory | payableaccount.PayableAccount | webauthnandecdsavalidator.WebAuthnAndECDSAValidator | config.Config | helper.Helper | tokenreceiver.TokenReceiver | mockrecoverymodule.MockRecoveryModule | pay.Pay | testerc20.TestERC20
 	}
 )
 
@@ -108,6 +112,20 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 		return cfg, fmt.Errorf("failed to instantiate MockRecoveryModule: %w", err)
 	}
 
+	log.Debug().Msg("Instantiating Pay")
+	cfg.Pay.Address = knownAddresses.Pay
+	cfg.Pay.Contract, err = pay.NewPay(knownAddresses.Pay, client)
+	if err != nil {
+		return cfg, fmt.Errorf("failed to instantiate Pay: %w", err)
+	}
+
+	log.Debug().Msg("Instantiating TestERC20")
+	cfg.TestERC20.Address = knownAddresses.TestERC20
+	cfg.TestERC20.Contract, err = testerc20.NewTestERC20(knownAddresses.TestERC20, client)
+	if err != nil {
+		return cfg, fmt.Errorf("failed to instantiate TestERC20: %w", err)
+	}
+
 	// Calculate the sender address (counterfactual address)
 	sender, err := cfg.AccountFactory.Contract.ComputeAddress(
 		cops,
@@ -129,10 +147,12 @@ func (c *ERC4337Config) GetAddresses() ERC4337Addresses {
 		EntryPoint:        c.EntryPoint.Address,
 		AccountFactory:    c.AccountFactory.Address,
 		PayableAccount:    c.PayableAccount.Address,
-		WebAuthnValidator: c.WebAuthnValidator.Address,
-		Config:            c.Config.Address,
-		Helper:            c.Helper.Address,
-		TokenReceiver:     c.TokenReceiver.Address,
+		WebAuthnValidator:  c.WebAuthnValidator.Address,
+		Config:             c.Config.Address,
+		Helper:             c.Helper.Address,
+		TokenReceiver:      c.TokenReceiver.Address,
 		MockRecoveryModule: c.MockRecoveryModule.Address,
+		Pay:                c.Pay.Address,
+		TestERC20:          c.TestERC20.Address,
 	}
 }
