@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"time"
@@ -34,26 +35,25 @@ type UserOperation struct {
 }
 
 var (
-	passkeyPubX, _ = new(big.Int).SetString("640c5cacef387563d0b105c7724c45ee19f8a952cb583de494a6a7ce5ed16760", 16)
-	passkeyPubY, _ = new(big.Int).SetString("142b33cbf8255e9f0628ab9e250e179a3e7e8e24e0a2a4340f0b9fdeb29a1b48", 16)
+	passkeyPubX, _    = new(big.Int).SetString("640c5cacef387563d0b105c7724c45ee19f8a952cb583de494a6a7ce5ed16760", 16)
+	passkeyPubY, _    = new(big.Int).SetString("142b33cbf8255e9f0628ab9e250e179a3e7e8e24e0a2a4340f0b9fdeb29a1b48", 16)
 	passkeyPrivKey, _ = new(big.Int).SetString("42d2bd030a8a71ff2f9043adcfb46138a5d87287cefff37d18a638f956c33449", 16)
 
-	salt *big.Int
+	salt     *big.Int
 	modeType [32]byte // 0x0000000000000000000000000000000000000000000000000000000000000000
 )
 
 func init() {
 	salt = big.NewInt(2)
-	// Hardcoded 
+	// Hardcoded
 	//     const modeType = mode.encodeModeType(
-    //   mode.CallType.Batch,
-    //   mode.ExecType.Default,
-    //   mode.ModeSelector.Default,
-    //   "0x"
-    // );
+	//   mode.CallType.Batch,
+	//   mode.ExecType.Default,
+	//   mode.ModeSelector.Default,
+	//   "0x"
+	// );
 	modeType = [32]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 }
-
 
 func GenerateUops(
 	client *ethclient.Client,
@@ -75,13 +75,21 @@ func GenerateUops(
 		return nil, fmt.Errorf("failed to get code at address: %v", err)
 	}
 
+	//uPrivateKey, err := ethcrypto.HexToECDSA("42d2bd030a8a71ff2f9043adcfb46138a5d87287cefff37d18a638f956c33449")
+	//if err != nil {
+	//	log.Info().Err(err).Msg("Failed to get private key")
+	//	return nil, err
+	//}
+	//uAddress := ethcrypto.PubkeyToAddress(uPrivateKey.PublicKey)
 	userOps := make([]entrypoint.PackedUserOperation, 0, batchSize)
 
 	for i := uint32(0); i < batchSize; i++ {
 		// Use a predefined calldata for ERC20 token operations (approve and transfer 1 token to 0x1111111111111111111111111111111111111111)
 		// This matches the calldata from the TypeScript implementation
-		calldata := common.FromHex("0xe9ae5c530100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000f05aa5dd8d33121e37b3bfe0b450ae46d195de62060000000000000000000000000000000000000000000000000000000000000000095ea7b300000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000de0b6b3a76400005aa5dd8d33121e37b3bfe0b450ae46d195de62060000000000000000000000000000000000000000000000000000000000000000a9059cbb00000000000000000000000011111111111111111111111111111111111111110000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000")
-
+		calldata, err := hex.DecodeString("e9ae5c530100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000002a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000012000000000000000000000000060af8725df0dbde1bed67cf5afbe308834508020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000044095ea7b3000000000000000000000000b103a8f0c98bb108270b5ab4a0cfb67453e122adffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000b103a8f0c98bb108270b5ab4a0cfb67453e122ad0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a496e1274d00000000000000000000000000000000000000000000000000000000def4b207000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060af8725df0dbde1bed67cf5afbe3088345080200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000def4b207000000000000000000000000def4b20700000000000000000000000000000000000000000000000000000000")
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate random transfer calldata: %v", err)
+		}
 		// Create base UserOperation
 		userOp := PackUserOp(UserOperation{
 			Sender: cfg.Sender,
@@ -94,8 +102,8 @@ func GenerateUops(
 				return nil
 			}(),
 			CallData:             calldata,
-			CallGasLimit:         big.NewInt(100000),
-			VerificationGasLimit: big.NewInt(2000000),
+			CallGasLimit:         big.NewInt(1000000),
+			VerificationGasLimit: big.NewInt(20000000),
 			PreVerificationGas:   big.NewInt(0),
 			MaxFeePerGas:         big.NewInt(1),
 			MaxPriorityFeePerGas: big.NewInt(1),
@@ -228,7 +236,7 @@ func generateSignatureForUop(
 		n.SetString("115792089210356248762697446949407573529996955224135760342422259061068512044369", 10)
 		s = new(big.Int).Sub(n, s)
 	}
-	
+
 	if !ecdsa.Verify(&passkeyPrivateKey.PublicKey, passkeyMsgHash[:], r, s) {
 		return nil, fmt.Errorf("failed to verify passkey signature")
 	}
@@ -322,3 +330,30 @@ func getRandomTransferCalldata() ([]byte, error) {
 
 	return calldata, nil
 }
+
+// Tranfer to random address with random amount
+//func getRandomTransferERC20Calldata(cfg *ERC4337Config) ([]byte, error) {
+//	erc20ABI := testtoken20.TestToken20MetaData.ABI
+//	payABI := pay.PayMetaData.ABI
+//	payableABI := payableaccount.PayableAccountMetaData.ABI
+//	// Parse the ABIs
+//	erc20, err := abi.JSON(strings.NewReader(erc20ABI))
+//	if err != nil {
+//		return nil, fmt.Errorf("failed to parse ERC20 ABI: %v", err)
+//	}
+//	pay, err := abi.JSON(strings.NewReader(payABI))
+//	if err != nil {
+//		return nil, fmt.Errorf("failed to parse Pay ABI: %v", err)
+//	}
+//	payable, err := abi.JSON(strings.NewReader(payableABI))
+//	if err != nil {
+//		return nil, fmt.Errorf("failed to parse SmartAccount ABI: %v", err)
+//	}
+//
+//	approveData, err := erc20.Pack("approve", randomAddr, randomAmount)
+//	if err != nil {
+//		return nil, fmt.Errorf("failed to encode approve data: %v", err)
+//	}
+//
+//	return calldata, nil
+//}
