@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"github.com/ethereum/go-ethereum/core/types"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -140,8 +141,10 @@ func runERC4337Loadtest(ctx context.Context, c *ethclient.Client, nonce uint64, 
 	}
 
 	// Send user operation
-	if _, err = config.EntryPoint.Contract.HandleOps(tops, userOps, tops.From); err != nil {
+	var tx *types.Transaction
+	if tx, err = config.EntryPoint.Contract.HandleOps(tops, userOps, tops.From); err != nil {
 		log.Error().Err(err).Msg("Failed to send user operations")
 	}
+	log.Info().Msgf("Send tx hash: %v", tx.Hash().String())
 	return
 }
