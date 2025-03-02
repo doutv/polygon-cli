@@ -35,6 +35,7 @@ type (
 		Pay                ContractConfig[pay.Pay]
 		TestERC20          ContractConfig[testerc20.TestERC20]
 		Sender             common.Address // computed counterfactual address
+		CallDataList       []string
 	}
 
 	// ERC4337Addresses is a subset of ERC4337Config. It represents the addresses of the whole
@@ -144,9 +145,9 @@ func DeployContracts(ctx context.Context, client *ethclient.Client, tops *bind.T
 // Return contracts addresses from the ERC4337 configuration.
 func (c *ERC4337Config) GetAddresses() ERC4337Addresses {
 	return ERC4337Addresses{
-		EntryPoint:        c.EntryPoint.Address,
-		AccountFactory:    c.AccountFactory.Address,
-		PayableAccount:    c.PayableAccount.Address,
+		EntryPoint:         c.EntryPoint.Address,
+		AccountFactory:     c.AccountFactory.Address,
+		PayableAccount:     c.PayableAccount.Address,
 		WebAuthnValidator:  c.WebAuthnValidator.Address,
 		Config:             c.Config.Address,
 		Helper:             c.Helper.Address,

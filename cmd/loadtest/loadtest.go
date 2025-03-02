@@ -661,7 +661,8 @@ func mainLoop(ctx context.Context, c *ethclient.Client, rpc *ethrpc.Client) erro
 			Helper:            ethcommon.HexToAddress(*erc4337LoadTestParams.Helper),
 			TokenReceiver:     ethcommon.HexToAddress(*erc4337LoadTestParams.TokenReceiver),
 		}
-		erc4337Config, err = initERC4337Loadtest(ctx, c, tops, cops, erc4337Addresses, *ltp.FromETHAddress, *erc4337LoadTestParams.UopBatchSize)
+
+		erc4337Config, err = initERC4337Loadtest(ctx, c, tops, cops, erc4337Addresses, *ltp.FromETHAddress, erc4337LoadTestParams)
 		if err != nil {
 			return err
 		}

@@ -1,8 +1,13 @@
 package loadtest
 
 import (
+	"bufio"
 	"context"
+	"fmt"
 	"math/big"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	erc4337loadtest "github.com/0xPolygon/polygon-cli/cmd/loadtest/erc4337"
@@ -19,8 +24,9 @@ var (
 )
 
 type erc4337params struct {
-	UopBatchSize          *uint32
+	UopBatchSize                                                                                                         *uint32
 	EntryPoint, AccountFactory, Config, Helper, TokenReceiver, WebAuthnAndECDSAValidator, PayableAccount, Pay, TestERC20 *string
+	CallDataFile                                                                                                         *string
 }
 
 var erc4337LoadTestCmd = &cobra.Command{
@@ -51,18 +57,59 @@ func init() {
 	params.PayableAccount = erc4337LoadTestCmd.Flags().String("payable-account", "", "The address of a pre-deployed PayableAccount contract")
 	params.Pay = erc4337LoadTestCmd.Flags().String("pay", "", "The address of a pre-deployed Pay contract")
 	params.TestERC20 = erc4337LoadTestCmd.Flags().String("test-erc20", "", "The address of a pre-deployed TestERC20 contract")
+	params.CallDataFile = erc4337LoadTestCmd.Flags().String("calldata-file", "", "The file containing the calldata to be used for the user operations")
 	erc4337LoadTestParams = *params
 }
 
-func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.TransactOpts, cops *bind.CallOpts, erc4337Addresses erc4337loadtest.ERC4337Addresses, fromAddress common.Address, uopBatchSize uint32) (erc4337Config erc4337loadtest.ERC4337Config, err error) {
+func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.TransactOpts, cops *bind.CallOpts, erc4337Addresses erc4337loadtest.ERC4337Addresses, fromAddress common.Address, erc4337LoadTestParams erc4337params) (erc4337Config erc4337loadtest.ERC4337Config, err error) {
 	log.Debug().Msg("Initializing ERC4337 contracts...")
 	erc4337Config, err = erc4337loadtest.DeployContracts(ctx, c, tops, cops, erc4337Addresses, fromAddress)
-	erc4337Config.UopBatchSize = uopBatchSize
+	erc4337Config.UopBatchSize = *erc4337LoadTestParams.UopBatchSize
+	erc4337Config.CallDataList, err = readLastFields(*erc4337LoadTestParams.CallDataFile)
+	if err != nil {
+		log.Error().Msgf("Failed to read call data file: %v, file:%v", err, *erc4337LoadTestParams.CallDataFile)
+		return
+	}
 	if err != nil {
 		panic(err)
 	}
 	log.Debug().Interface("addresses", erc4337Config.GetAddresses()).Msg("ERC4337 contracts deployed")
 	return
+}
+
+func readLastFields(filePath string) ([]string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error getting working directory:", err)
+		return nil, err
+	}
+	newFilePath := filepath.Join(cwd, filePath)
+	file, err := os.Open(newFilePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var callDataList []string
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		fields := strings.Split(line, ",")
+		lastField := fields[len(fields)-1]
+		callDataList = append(callDataList, lastField)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return callDataList, nil
 }
 
 func runERC4337Loadtest(ctx context.Context, c *ethclient.Client, nonce uint64, config erc4337loadtest.ERC4337Config) (t1 time.Time, t2 time.Time, err error) {
