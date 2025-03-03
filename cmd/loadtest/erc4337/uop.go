@@ -90,7 +90,10 @@ func GenerateUops(
 		// This matches the calldata from the TypeScript implementation
 		mRand.Seed(time.Now().UnixNano())
 		randomIndex := mRand.Intn(len(cfg.CallDataList))
-		rawCallData := cfg.CallDataList[randomIndex]
+
+		fields := strings.Split(cfg.CallDataList[randomIndex], ",")
+		sender := fields[0]
+		rawCallData := fields[1]
 		calldata, err := hex.DecodeString(strings.TrimPrefix(rawCallData, "0x"))
 		log.Info().Msg("calldata: " + rawCallData)
 		if err != nil {
@@ -98,7 +101,7 @@ func GenerateUops(
 		}
 		// Create base UserOperation
 		userOp := PackUserOp(UserOperation{
-			Sender: cfg.Sender,
+			Sender: common.HexToAddress(sender),
 			// it is safe to use the same nonce for all UOPs, since uop nonce validation is disabled
 			Nonce: tops.Nonce,
 			InitCode: func() []byte {
@@ -109,7 +112,7 @@ func GenerateUops(
 			}(),
 			CallData:             calldata,
 			CallGasLimit:         big.NewInt(1000000),
-			VerificationGasLimit: big.NewInt(20000000),
+			VerificationGasLimit: big.NewInt(1000000),
 			PreVerificationGas:   big.NewInt(0),
 			MaxFeePerGas:         big.NewInt(1),
 			MaxPriorityFeePerGas: big.NewInt(1),

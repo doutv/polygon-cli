@@ -66,7 +66,7 @@ func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.Tr
 	log.Debug().Msg("Initializing ERC4337 contracts...")
 	erc4337Config, err = erc4337loadtest.DeployContracts(ctx, c, tops, cops, erc4337Addresses, fromAddress)
 	erc4337Config.UopBatchSize = *erc4337LoadTestParams.UopBatchSize
-	erc4337Config.CallDataList, err = readLastFields(*erc4337LoadTestParams.CallDataFile)
+	erc4337Config.CallDataList, err = readFields(*erc4337LoadTestParams.CallDataFile)
 	if err != nil {
 		log.Error().Msgf("Failed to read call data file: %v, file:%v", err, *erc4337LoadTestParams.CallDataFile)
 		return
@@ -78,7 +78,7 @@ func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.Tr
 	return
 }
 
-func readLastFields(filePath string) ([]string, error) {
+func readFields(filePath string) ([]string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Println("Error getting working directory:", err)
@@ -100,10 +100,7 @@ func readLastFields(filePath string) ([]string, error) {
 		if line == "" {
 			continue
 		}
-
-		fields := strings.Split(line, ",")
-		lastField := fields[len(fields)-1]
-		callDataList = append(callDataList, lastField)
+		callDataList = append(callDataList, line)
 	}
 
 	if err := scanner.Err(); err != nil {
