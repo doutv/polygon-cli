@@ -76,18 +76,12 @@ func GenerateUops(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get code at address: %v", err)
 	}
-
-	//uPrivateKey, err := ethcrypto.HexToECDSA("42d2bd030a8a71ff2f9043adcfb46138a5d87287cefff37d18a638f956c33449")
-	//if err != nil {
-	//	log.Info().Err(err).Msg("Failed to get private key")
-	//	return nil, err
-	//}
-	//uAddress := ethcrypto.PubkeyToAddress(uPrivateKey.PublicKey)
+	if code == nil {
+		log.Error().Msg("Account needs initialization")
+		return nil, fmt.Errorf("account needs initialization")
+	}
 	userOps := make([]entrypoint.PackedUserOperation, 0, batchSize)
-
 	for i := uint32(0); i < batchSize; i++ {
-		// Use a predefined calldata for ERC20 token operations (approve and transfer 1 token)
-		// This matches the calldata from the TypeScript implementation
 		mRand.Seed(time.Now().UnixNano())
 		randomIndex := mRand.Intn(len(cfg.CallDataList))
 
@@ -95,21 +89,15 @@ func GenerateUops(
 		sender := fields[0]
 		rawCallData := fields[1]
 		calldata, err := hex.DecodeString(strings.TrimPrefix(rawCallData, "0x"))
-		log.Info().Msg("calldata: " + rawCallData)
+		log.Info().Msgf("send:%v, calldata:%v", sender, rawCallData)
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate random transfer calldata: %v", err)
 		}
 		// Create base UserOperation
 		userOp := PackUserOp(UserOperation{
-			Sender: common.HexToAddress(sender),
-			// it is safe to use the same nonce for all UOPs, since uop nonce validation is disabled
-			Nonce: tops.Nonce,
-			InitCode: func() []byte {
-				if code == nil {
-					return initCode
-				}
-				return nil
-			}(),
+			Sender:               common.HexToAddress(sender),
+			Nonce:                big.NewInt(1),
+			InitCode:             nil,
 			CallData:             calldata,
 			CallGasLimit:         big.NewInt(1000000),
 			VerificationGasLimit: big.NewInt(1000000),
