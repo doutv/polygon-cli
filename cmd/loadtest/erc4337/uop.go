@@ -7,6 +7,11 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	mRand "math/rand"
+	"strings"
+	"time"
+
 	"github.com/0xPolygon/polygon-cli/bindings/4337/entryPoint/core/entrypoint"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/payableaccount"
 	"github.com/0xPolygon/polygon-cli/bindings/4337/test/helper"
@@ -15,10 +20,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog/log"
-	"math/big"
-	mRand "math/rand"
-	"strings"
-	"time"
 )
 
 // UserOperation represents an ERC-4337 User Operation
@@ -89,7 +90,7 @@ func GenerateUops(
 		sender := fields[0]
 		rawCallData := fields[1]
 		calldata, err := hex.DecodeString(strings.TrimPrefix(rawCallData, "0x"))
-		log.Info().Msgf("send:%v, calldata:%v", sender, rawCallData)
+		// log.Info().Msgf("send:%v, calldata:%v", sender, rawCallData)
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate random transfer calldata: %v", err)
 		}
