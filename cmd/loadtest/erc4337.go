@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/ethereum/go-ethereum/core/types"
 	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/ethereum/go-ethereum/core/types"
 
 	erc4337loadtest "github.com/0xPolygon/polygon-cli/cmd/loadtest/erc4337"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -142,6 +143,10 @@ func runERC4337Loadtest(ctx context.Context, c *ethclient.Client, nonce uint64, 
 	if tx, err = config.EntryPoint.Contract.HandleOps(tops, userOps, tops.From); err != nil {
 		log.Error().Err(err).Msg("Failed to send user operations")
 	}
-	log.Info().Msgf("Send tx hash: %v", tx.Hash().String())
+	if tx != nil {
+		log.Info().Msgf("Send tx hash: %v", tx.Hash().String())
+	} else {
+		log.Error().Msg("Failed to send user operations")
+	}
 	return
 }
