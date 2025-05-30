@@ -67,6 +67,7 @@ func GenerateUops(
 	cfg *ERC4337Config,
 	initCode []byte,
 	batchSize uint32,
+	verifierType uint8,
 ) ([]entrypoint.PackedUserOperation, error) {
 	if batchSize == 0 {
 		return nil, fmt.Errorf("no uops to generate")
@@ -110,7 +111,7 @@ func GenerateUops(
 		})
 
 		// Generate signature
-		sig, err := generateSignatureForUop(tops, cops, userOp, cfg.EntryPoint.Contract, cfg.Helper.Contract, eoaPrivateKey)
+		sig, err := generateSignatureForUop(tops, cops, userOp, cfg.EntryPoint.Contract, cfg.Helper.Contract, eoaPrivateKey, verifierType)
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate signature: %v", err)
 		}
@@ -162,6 +163,7 @@ func generateSignatureForUop(
 	entryPoint *entrypoint.EntryPoint,
 	helper *helper.Helper,
 	eoaPrivateKey *ecdsa.PrivateKey,
+	verifierType uint8,
 ) ([]byte, error) {
 	// Calculate expiration time (1 day from now)
 	expireTime := big.NewInt(time.Now().Unix() + 86400)
@@ -238,11 +240,6 @@ func generateSignatureForUop(
 	if !ecdsa.Verify(&passkeyPrivateKey.PublicKey, passkeyMsgHash[:], r, s) {
 		return nil, fmt.Errorf("failed to verify passkey signature")
 	}
-	// Verify passkey signature
-	/// 0 : PRECOMPILED_VERIFIER, helper validation passes, but handleops fails.
-	/// 1 : DAIMO_VERIFIER success
-	/// 2 : ELLIPTIC_CURVE success(local fork node)
-	verifyType := uint8(0)
 	isVerifySuccess, _, err := helper.PasskeyVerify(
 		cops,
 		uopHash,
@@ -250,7 +247,7 @@ func generateSignatureForUop(
 		s,
 		passkeyPubX,
 		passkeyPubY,
-		verifyType,
+		verifierType,
 		clientJson.ClientDataJSON,
 	)
 	if err != nil || !isVerifySuccess {
@@ -262,7 +259,7 @@ func generateSignatureForUop(
 		cops,
 		r,
 		s,
-		verifyType,
+		verifierType,
 		clientJson.ClientDataJSON,
 	)
 	if err != nil {
