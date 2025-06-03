@@ -26,6 +26,7 @@ var (
 )
 
 type erc4337params struct {
+	VerifierType                                                                                                         *uint8
 	UopBatchSize                                                                                                         *uint32
 	EntryPoint, AccountFactory, Config, Helper, TokenReceiver, WebAuthnAndECDSAValidator, PayableAccount, Pay, TestERC20 *string
 	CallDataFile                                                                                                         *string
@@ -49,6 +50,7 @@ var erc4337LoadTestCmd = &cobra.Command{
 
 func init() {
 	params := new(erc4337params)
+	params.VerifierType = erc4337LoadTestCmd.Flags().Uint8("verifier-type", 0, "The type of verification to be used for the user operations. 0: PRECOMPILED_VERIFIER, 1: DAIMO_VERIFIER(P256), 2: ELLIPTIC_CURVE")
 	params.UopBatchSize = erc4337LoadTestCmd.Flags().Uint32("uop-batch-size", 1, "The batch size of user operations")
 	params.EntryPoint = erc4337LoadTestCmd.Flags().String("entry-point", "", "The address of a pre-deployed EntryPoint contract")
 	params.AccountFactory = erc4337LoadTestCmd.Flags().String("account-factory", "", "The address of a pre-deployed AccountFactory contract")
@@ -66,6 +68,7 @@ func init() {
 func initERC4337Loadtest(ctx context.Context, c *ethclient.Client, tops *bind.TransactOpts, cops *bind.CallOpts, erc4337Addresses erc4337loadtest.ERC4337Addresses, fromAddress common.Address, erc4337LoadTestParams erc4337params) (erc4337Config erc4337loadtest.ERC4337Config, err error) {
 	log.Debug().Msg("Initializing ERC4337 contracts...")
 	erc4337Config, err = erc4337loadtest.DeployContracts(ctx, c, tops, cops, erc4337Addresses, fromAddress)
+	erc4337Config.VerifierType = *erc4337LoadTestParams.VerifierType
 	erc4337Config.UopBatchSize = *erc4337LoadTestParams.UopBatchSize
 	erc4337Config.CallDataList, err = readFields(*erc4337LoadTestParams.CallDataFile)
 	if err != nil {
@@ -132,7 +135,7 @@ func runERC4337Loadtest(ctx context.Context, c *ethclient.Client, nonce uint64, 
 	defer func() { t2 = time.Now() }()
 
 	// Generate new user operations each time
-	userOps, err := erc4337loadtest.GenerateUops(c, ctx, tops, cops, privateKey, &config, nil, config.UopBatchSize)
+	userOps, err := erc4337loadtest.GenerateUops(c, ctx, tops, cops, privateKey, &config, nil, config.UopBatchSize, config.VerifierType)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate user operations")
 		return
